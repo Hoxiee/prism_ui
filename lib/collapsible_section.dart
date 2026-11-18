@@ -298,6 +298,23 @@ class _CollapsibleHeaderState extends State<CollapsibleHeader> {
     final focused = collapsible && _focused;
     final leading = widget.leading;
     final trailing = widget.trailing;
+    final label = Text.rich(
+      TextSpan(
+        children: [
+          TextSpan(text: widget.label),
+          TextSpan(
+            text: ' (${widget.count})',
+            style: TextStyle(
+              color: colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.normal,
+            ),
+          ),
+        ],
+      ),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: AppTextStyle.headline.of(context),
+    );
     return FocusableActionDetector(
       enabled: collapsible,
       actions: _actions,
@@ -323,31 +340,14 @@ class _CollapsibleHeaderState extends State<CollapsibleHeader> {
                   spacing: _spacing,
                   children: [
                     Expanded(
-                      child: Row(
-                        children: [
-                          if (leading != null)
-                            _LeadingGap(gap: _spacing, child: leading),
-                          Expanded(
-                            child: Text.rich(
-                              TextSpan(
-                                children: [
-                                  TextSpan(text: widget.label),
-                                  TextSpan(
-                                    text: ' (${widget.count})',
-                                    style: TextStyle(
-                                      color: colorScheme.onSurfaceVariant,
-                                      fontWeight: FontWeight.normal,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: AppTextStyle.headline.of(context),
+                      child: leading == null
+                          ? label
+                          : Row(
+                              children: [
+                                _LeadingGap(gap: _spacing, child: leading),
+                                Expanded(child: label),
+                              ],
                             ),
-                          ),
-                        ],
-                      ),
                     ),
                     if (trailing != null)
                       DefaultTextStyle.merge(
