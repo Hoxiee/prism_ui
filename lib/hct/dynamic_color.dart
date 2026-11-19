@@ -27,7 +27,7 @@ class DynamicColor {
   final bool isBackground;
   final DynamicColor Function(DynamicScheme)? background;
   final DynamicColor Function(DynamicScheme)? secondBackground;
-  final double? contrast;
+  final ContrastCurve? contrast;
   final ToneDeltaPair Function(DynamicScheme)? toneDeltaPair;
 
   final Map<DynamicScheme, Hct> _hctCache = {};
@@ -80,8 +80,8 @@ class DynamicColor {
       final amNearer = identical(this, nearer);
       final expansionDir = scheme.isDark ? 1 : -1;
 
-      final nContrast = nearer.contrast!;
-      final fContrast = farther.contrast!;
+      final nContrast = nearer.contrast!.get(scheme.contrastLevel);
+      final fContrast = farther.contrast!.get(scheme.contrastLevel);
 
       final nInitialTone = nearer.tone(scheme);
       var nTone = Contrast.ratioOfTones(bgTone, nInitialTone) >= nContrast
@@ -135,7 +135,7 @@ class DynamicColor {
 
       final bgTone = background!(scheme).getTone(scheme);
 
-      final desiredRatio = contrast!;
+      final desiredRatio = contrast!.get(scheme.contrastLevel);
 
       if (Contrast.ratioOfTones(bgTone, answer) < desiredRatio) {
         answer = DynamicColor.foregroundTone(bgTone, desiredRatio);
@@ -223,6 +223,26 @@ class DynamicColor {
   static bool toneAllowsLightForeground(double tone) {
     return tone.round() <= 49;
   }
+}
+
+/// Desired contrast ratios at contrast levels -1, 0, 0.5 and 1.
+class ContrastCurve {
+  final double low;
+  final double normal;
+  final double medium;
+  final double high;
+
+  const ContrastCurve(this.low, this.normal, this.medium, this.high);
+
+  double get(double level) {
+    if (level <= -1.0) return low;
+    if (level < 0.0) return _lerp(low, normal, level + 1.0);
+    if (level < 0.5) return _lerp(normal, medium, level / 0.5);
+    if (level < 1.0) return _lerp(medium, high, (level - 0.5) / 0.5);
+    return high;
+  }
+
+  static double _lerp(double a, double b, double t) => a + (b - a) * t;
 }
 
 enum TonePolarity { lighter, nearer }

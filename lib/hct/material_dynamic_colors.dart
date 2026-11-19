@@ -82,14 +82,14 @@ class MaterialDynamicColors {
     palette: (s) => s.neutralPalette,
     tone: (s) => s.isDark ? 90 : 10,
     background: MaterialDynamicColors.highestSurface,
-    contrast: 7,
+    contrast: const ContrastCurve(4.5, 7, 11, 21),
   );
 
   static final DynamicColor onSurfaceVariant = DynamicColor(
     palette: (s) => s.neutralVariantPalette,
     tone: (s) => s.isDark ? 80 : 30,
     background: MaterialDynamicColors.highestSurface,
-    contrast: 4.5,
+    contrast: const ContrastCurve(3, 4.5, 7, 11),
   );
 
   static final DynamicColor inverseSurface = DynamicColor(
@@ -101,21 +101,21 @@ class MaterialDynamicColors {
     palette: (s) => s.neutralPalette,
     tone: (s) => s.isDark ? 20 : 95,
     background: (s) => MaterialDynamicColors.inverseSurface,
-    contrast: 7,
+    contrast: const ContrastCurve(4.5, 7, 11, 21),
   );
 
   static final DynamicColor outline = DynamicColor(
     palette: (s) => s.neutralVariantPalette,
     tone: (s) => s.isDark ? 60 : 50,
     background: MaterialDynamicColors.highestSurface,
-    contrast: 3,
+    contrast: const ContrastCurve(1.5, 3, 4.5, 7),
   );
 
   static final DynamicColor outlineVariant = DynamicColor(
     palette: (s) => s.neutralVariantPalette,
     tone: (s) => s.isDark ? 30 : 80,
     background: MaterialDynamicColors.highestSurface,
-    contrast: 1,
+    contrast: const ContrastCurve(1, 1, 3, 4.5),
   );
 
   static final DynamicColor shadow = DynamicColor(
@@ -138,7 +138,7 @@ class MaterialDynamicColors {
     },
     isBackground: true,
     background: MaterialDynamicColors.highestSurface,
-    contrast: 4.5,
+    contrast: const ContrastCurve(3, 4.5, 7, 7),
     toneDeltaPair: (s) => ToneDeltaPair(
       MaterialDynamicColors.primaryContainer,
       MaterialDynamicColors.primary,
@@ -157,7 +157,7 @@ class MaterialDynamicColors {
       return s.isDark ? 20 : 100;
     },
     background: (s) => MaterialDynamicColors.primary,
-    contrast: 7,
+    contrast: const ContrastCurve(4.5, 7, 11, 21),
   );
 
   static final DynamicColor primaryContainer = DynamicColor(
@@ -173,7 +173,7 @@ class MaterialDynamicColors {
     },
     isBackground: true,
     background: MaterialDynamicColors.highestSurface,
-    contrast: 1,
+    contrast: const ContrastCurve(1, 1, 3, 4.5),
     toneDeltaPair: (s) => ToneDeltaPair(
       MaterialDynamicColors.primaryContainer,
       MaterialDynamicColors.primary,
@@ -198,14 +198,14 @@ class MaterialDynamicColors {
       return s.isDark ? 90 : 30;
     },
     background: (s) => MaterialDynamicColors.primaryContainer,
-    contrast: 4.5,
+    contrast: const ContrastCurve(3, 4.5, 7, 11),
   );
 
   static final DynamicColor inversePrimary = DynamicColor(
     palette: (s) => s.primaryPalette,
     tone: (s) => s.isDark ? 40 : 80,
     background: (s) => MaterialDynamicColors.inverseSurface,
-    contrast: 4.5,
+    contrast: const ContrastCurve(3, 4.5, 7, 7),
   );
 
   static final DynamicColor secondary = DynamicColor(
@@ -213,7 +213,7 @@ class MaterialDynamicColors {
     tone: (s) => s.isDark ? 80 : 40,
     isBackground: true,
     background: MaterialDynamicColors.highestSurface,
-    contrast: 4.5,
+    contrast: const ContrastCurve(3, 4.5, 7, 7),
     toneDeltaPair: (s) => ToneDeltaPair(
       MaterialDynamicColors.secondaryContainer,
       MaterialDynamicColors.secondary,
@@ -233,7 +233,7 @@ class MaterialDynamicColors {
       }
     },
     background: (s) => MaterialDynamicColors.secondary,
-    contrast: 7,
+    contrast: const ContrastCurve(4.5, 7, 11, 21),
   );
 
   static final DynamicColor secondaryContainer = DynamicColor(
@@ -255,7 +255,7 @@ class MaterialDynamicColors {
     },
     isBackground: true,
     background: MaterialDynamicColors.highestSurface,
-    contrast: 1,
+    contrast: const ContrastCurve(1, 1, 3, 4.5),
     toneDeltaPair: (s) => ToneDeltaPair(
       MaterialDynamicColors.secondaryContainer,
       MaterialDynamicColors.secondary,
@@ -280,7 +280,7 @@ class MaterialDynamicColors {
       );
     },
     background: (s) => MaterialDynamicColors.secondaryContainer,
-    contrast: 4.5,
+    contrast: const ContrastCurve(3, 4.5, 7, 11),
   );
 
   static final DynamicColor tertiary = DynamicColor(
@@ -293,7 +293,7 @@ class MaterialDynamicColors {
     },
     isBackground: true,
     background: MaterialDynamicColors.highestSurface,
-    contrast: 4.5,
+    contrast: const ContrastCurve(3, 4.5, 7, 7),
     toneDeltaPair: (s) => ToneDeltaPair(
       MaterialDynamicColors.tertiaryContainer,
       MaterialDynamicColors.tertiary,
@@ -312,7 +312,7 @@ class MaterialDynamicColors {
       return s.isDark ? 20 : 100;
     },
     background: (s) => MaterialDynamicColors.tertiary,
-    contrast: 7,
+    contrast: const ContrastCurve(4.5, 7, 11, 21),
   );
 
   static final DynamicColor tertiaryContainer = DynamicColor(
@@ -329,7 +329,7 @@ class MaterialDynamicColors {
     },
     isBackground: true,
     background: MaterialDynamicColors.highestSurface,
-    contrast: 1,
+    contrast: const ContrastCurve(1, 1, 3, 4.5),
     toneDeltaPair: (s) => ToneDeltaPair(
       MaterialDynamicColors.tertiaryContainer,
       MaterialDynamicColors.tertiary,
@@ -354,7 +354,7 @@ class MaterialDynamicColors {
       );
     },
     background: (s) => MaterialDynamicColors.tertiaryContainer,
-    contrast: 4.5,
+    contrast: const ContrastCurve(3, 4.5, 7, 11),
   );
 
   static final DynamicColor error = DynamicColor(
@@ -362,7 +362,7 @@ class MaterialDynamicColors {
     tone: (s) => s.isDark ? 80 : 40,
     isBackground: true,
     background: MaterialDynamicColors.highestSurface,
-    contrast: 4.5,
+    contrast: const ContrastCurve(3, 4.5, 7, 7),
     toneDeltaPair: (s) => ToneDeltaPair(
       MaterialDynamicColors.errorContainer,
       MaterialDynamicColors.error,
@@ -376,7 +376,7 @@ class MaterialDynamicColors {
     palette: (s) => s.errorPalette,
     tone: (s) => s.isDark ? 20 : 100,
     background: (s) => MaterialDynamicColors.error,
-    contrast: 7,
+    contrast: const ContrastCurve(4.5, 7, 11, 21),
   );
 
   static final DynamicColor errorContainer = DynamicColor(
@@ -384,7 +384,7 @@ class MaterialDynamicColors {
     tone: (s) => s.isDark ? 30 : 90,
     isBackground: true,
     background: MaterialDynamicColors.highestSurface,
-    contrast: 1,
+    contrast: const ContrastCurve(1, 1, 3, 4.5),
     toneDeltaPair: (s) => ToneDeltaPair(
       MaterialDynamicColors.errorContainer,
       MaterialDynamicColors.error,
@@ -403,7 +403,7 @@ class MaterialDynamicColors {
       return s.isDark ? 90 : 30;
     },
     background: (s) => MaterialDynamicColors.errorContainer,
-    contrast: 4.5,
+    contrast: const ContrastCurve(3, 4.5, 7, 11),
   );
 
   static final DynamicColor primaryFixed = DynamicColor(
@@ -411,7 +411,7 @@ class MaterialDynamicColors {
     tone: (s) => _isMonochrome(s) ? 40.0 : 90.0,
     isBackground: true,
     background: MaterialDynamicColors.highestSurface,
-    contrast: 1,
+    contrast: const ContrastCurve(1, 1, 3, 4.5),
     toneDeltaPair: (s) => ToneDeltaPair(
       MaterialDynamicColors.primaryFixed,
       MaterialDynamicColors.primaryFixedDim,
@@ -426,7 +426,7 @@ class MaterialDynamicColors {
     tone: (s) => _isMonochrome(s) ? 30.0 : 80.0,
     isBackground: true,
     background: MaterialDynamicColors.highestSurface,
-    contrast: 1,
+    contrast: const ContrastCurve(1, 1, 3, 4.5),
     toneDeltaPair: (s) => ToneDeltaPair(
       MaterialDynamicColors.primaryFixed,
       MaterialDynamicColors.primaryFixedDim,
@@ -441,7 +441,7 @@ class MaterialDynamicColors {
     tone: (s) => _isMonochrome(s) ? 100.0 : 10.0,
     background: (s) => MaterialDynamicColors.primaryFixedDim,
     secondBackground: (s) => MaterialDynamicColors.primaryFixed,
-    contrast: 7,
+    contrast: const ContrastCurve(4.5, 7, 11, 21),
   );
 
   static final DynamicColor onPrimaryFixedVariant = DynamicColor(
@@ -449,7 +449,7 @@ class MaterialDynamicColors {
     tone: (s) => _isMonochrome(s) ? 90.0 : 30.0,
     background: (s) => MaterialDynamicColors.primaryFixedDim,
     secondBackground: (s) => MaterialDynamicColors.primaryFixed,
-    contrast: 4.5,
+    contrast: const ContrastCurve(3, 4.5, 7, 11),
   );
 
   static final DynamicColor secondaryFixed = DynamicColor(
@@ -457,7 +457,7 @@ class MaterialDynamicColors {
     tone: (s) => _isMonochrome(s) ? 80.0 : 90.0,
     isBackground: true,
     background: MaterialDynamicColors.highestSurface,
-    contrast: 1,
+    contrast: const ContrastCurve(1, 1, 3, 4.5),
     toneDeltaPair: (s) => ToneDeltaPair(
       MaterialDynamicColors.secondaryFixed,
       MaterialDynamicColors.secondaryFixedDim,
@@ -472,7 +472,7 @@ class MaterialDynamicColors {
     tone: (s) => _isMonochrome(s) ? 70.0 : 80.0,
     isBackground: true,
     background: MaterialDynamicColors.highestSurface,
-    contrast: 1,
+    contrast: const ContrastCurve(1, 1, 3, 4.5),
     toneDeltaPair: (s) => ToneDeltaPair(
       MaterialDynamicColors.secondaryFixed,
       MaterialDynamicColors.secondaryFixedDim,
@@ -487,7 +487,7 @@ class MaterialDynamicColors {
     tone: (s) => 10.0,
     background: (s) => MaterialDynamicColors.secondaryFixedDim,
     secondBackground: (s) => MaterialDynamicColors.secondaryFixed,
-    contrast: 7,
+    contrast: const ContrastCurve(4.5, 7, 11, 21),
   );
 
   static final DynamicColor onSecondaryFixedVariant = DynamicColor(
@@ -495,7 +495,7 @@ class MaterialDynamicColors {
     tone: (s) => _isMonochrome(s) ? 25.0 : 30.0,
     background: (s) => MaterialDynamicColors.secondaryFixedDim,
     secondBackground: (s) => MaterialDynamicColors.secondaryFixed,
-    contrast: 4.5,
+    contrast: const ContrastCurve(3, 4.5, 7, 11),
   );
 
   static final DynamicColor tertiaryFixed = DynamicColor(
@@ -503,7 +503,7 @@ class MaterialDynamicColors {
     tone: (s) => _isMonochrome(s) ? 40.0 : 90.0,
     isBackground: true,
     background: MaterialDynamicColors.highestSurface,
-    contrast: 1,
+    contrast: const ContrastCurve(1, 1, 3, 4.5),
     toneDeltaPair: (s) => ToneDeltaPair(
       MaterialDynamicColors.tertiaryFixed,
       MaterialDynamicColors.tertiaryFixedDim,
@@ -518,7 +518,7 @@ class MaterialDynamicColors {
     tone: (s) => _isMonochrome(s) ? 30.0 : 80.0,
     isBackground: true,
     background: MaterialDynamicColors.highestSurface,
-    contrast: 1,
+    contrast: const ContrastCurve(1, 1, 3, 4.5),
     toneDeltaPair: (s) => ToneDeltaPair(
       MaterialDynamicColors.tertiaryFixed,
       MaterialDynamicColors.tertiaryFixedDim,
@@ -533,7 +533,7 @@ class MaterialDynamicColors {
     tone: (s) => _isMonochrome(s) ? 100.0 : 10.0,
     background: (s) => MaterialDynamicColors.tertiaryFixedDim,
     secondBackground: (s) => MaterialDynamicColors.tertiaryFixed,
-    contrast: 7,
+    contrast: const ContrastCurve(4.5, 7, 11, 21),
   );
 
   static final DynamicColor onTertiaryFixedVariant = DynamicColor(
@@ -541,7 +541,7 @@ class MaterialDynamicColors {
     tone: (s) => _isMonochrome(s) ? 90.0 : 30.0,
     background: (s) => MaterialDynamicColors.tertiaryFixedDim,
     secondBackground: (s) => MaterialDynamicColors.tertiaryFixed,
-    contrast: 4.5,
+    contrast: const ContrastCurve(3, 4.5, 7, 11),
   );
 
   static double _findDesiredChromaByTone(

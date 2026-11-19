@@ -62,6 +62,16 @@ ColorScheme seededColorScheme({
     );
   }
 
+  // Raised contrast moves the container pair along the scheme's own tones.
+  int containerTone(bool background, int standardTone) {
+    if (contrast == ColorContrast.standard) return standardTone;
+    return (background
+            ? MaterialDynamicColors.primaryContainer
+            : MaterialDynamicColors.onPrimaryContainer)
+        .getTone(scheme)
+        .round();
+  }
+
   Color role(DynamicColor color) => Color(color.getArgb(scheme));
 
   final paperChroma = dark ? _surfaceChroma : _paperChroma;
@@ -79,8 +89,10 @@ ColorScheme seededColorScheme({
     primary: primaryColor,
     onPrimary: accent?.onPrimary ?? role(MaterialDynamicColors.onPrimary),
     surfaceTint: primaryColor,
-    primaryContainer: Color(container.get(dark ? 30 : 90)),
-    onPrimaryContainer: Color(container.get(dark ? 90 : 30)),
+    primaryContainer: Color(container.get(containerTone(true, dark ? 30 : 90))),
+    onPrimaryContainer: Color(
+      container.get(containerTone(false, dark ? 90 : 30)),
+    ),
     primaryFixed: role(MaterialDynamicColors.primaryFixed),
     primaryFixedDim: role(MaterialDynamicColors.primaryFixedDim),
     onPrimaryFixed: role(MaterialDynamicColors.onPrimaryFixed),
