@@ -852,7 +852,7 @@ class _SnapSheet extends StatefulWidget {
 class _SnapSheetState extends State<_SnapSheet>
     with SingleTickerProviderStateMixin {
   late final _model = _SheetModel(route: widget.route, vsync: this);
-  late final _scrollController = _SheetScrollController(model: _model);
+  late final _scrollController = _SheetScrollController();
 
   Duration? _lastWheel;
 
@@ -874,13 +874,6 @@ class _SnapSheetState extends State<_SnapSheet>
     _scrollController.dispose();
     _model.dispose();
     super.dispose();
-  }
-
-  ScrollController _createScrollController({double initialScrollOffset = 0}) {
-    return _SheetScrollController(
-      model: _model,
-      initialScrollOffset: initialScrollOffset,
-    );
   }
 
   /// Sees the events the content scrolls with too, so a turn the content
@@ -939,9 +932,12 @@ class _SnapSheetState extends State<_SnapSheet>
                       fitsContent: route.fitsContent,
                       child: SheetDismissScope(
                         handler: route._dismissHandler,
-                        child: SheetScrollScope(
-                          createController: _createScrollController,
-                          child: content,
+                        child: _SheetScrollModel(
+                          model: _model,
+                          child: SheetScrollScope(
+                            createController: createSheetScrollController,
+                            child: content,
+                          ),
                         ),
                       ),
                     ),
@@ -1194,7 +1190,18 @@ class _RenderSheetViewport extends RenderBox
     if (_model.fitsContent) {
       _model.fitContent();
       final fitted = _model.height;
-      if (fitted != height && fitted <= limit) {
+      final fittedLimit = _model.beginLayout(
+        size.height,
+        size.width,
+        _keyboard,
+      );
+      var relayout = fitted != height && fitted <= fittedLimit;
+      if (content != null &&
+          content._room != fittedLimit + _model.slackFor(fittedLimit)) {
+        invokeLayoutCallback<BoxConstraints>((_) => content.markNeedsLayout());
+        relayout = true;
+      }
+      if (relayout) {
         height = fitted;
         _layoutSheet(height);
       }
@@ -1387,14 +1394,49 @@ class _RenderSheetContent extends RenderProxyBox {
   }
 }
 
-class _SheetScrollController extends ScrollController
-    with SheetScrollController {
-  _SheetScrollController({required this.model, super.initialScrollOffset});
+ScrollController createSheetScrollController({double initialScrollOffset = 0}) {
+  return _SheetScrollController(initialScrollOffset: initialScrollOffset);
+}
+
+class _SheetScrollModel extends InheritedWidget {
+  const _SheetScrollModel({required this.model, required super.child});
 
   final _SheetModel model;
 
+  static _SheetModel? of(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<_SheetScrollModel>()?.model;
+
   @override
-  ValueListenable<bool> get sheetOpen => model.open;
+  bool updateShouldNotify(_SheetScrollModel oldWidget) =>
+      model != oldWidget.model;
+}
+
+class _SheetScrollController extends ScrollController
+    with SheetScrollController {
+  _SheetScrollController({super.initialScrollOffset});
+
+  final _sheetOpen = ValueNotifier(true);
+  _SheetModel? _model;
+  bool _disposed = false;
+
+  @override
+  ValueListenable<bool> get sheetOpen => _sheetOpen;
+
+  void _syncOpen() {
+    if (!_disposed) {
+      _sheetOpen.value = _model?.open.value ?? true;
+    }
+  }
+
+  void _bindModel(_SheetModel? model) {
+    if (identical(_model, model)) {
+      return;
+    }
+    _model?.open.removeListener(_syncOpen);
+    _model = model;
+    model?.open.addListener(_syncOpen);
+    SchedulerBinding.instance.addPostFrameCallback((_) => _syncOpen());
+  }
 
   @override
   ScrollPosition createScrollPosition(
@@ -1402,6 +1444,11 @@ class _SheetScrollController extends ScrollController
     ScrollContext context,
     ScrollPosition? oldPosition,
   ) {
+    final model = _SheetScrollModel.of(context.storageContext);
+    _bindModel(model);
+    if (model == null) {
+      return super.createScrollPosition(physics, context, oldPosition);
+    }
     return _SheetScrollPosition(
       physics: _SheetContentPhysics(parent: physics),
       context: context,
@@ -1409,6 +1456,14 @@ class _SheetScrollController extends ScrollController
       initialPixels: initialPixelsFromTop(context, initialScrollOffset),
       model: model,
     );
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    _model?.open.removeListener(_syncOpen);
+    _sheetOpen.dispose();
+    super.dispose();
   }
 }
 

@@ -112,13 +112,20 @@ class PagedSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final type = SheetProvider.of(context)?.type;
     final pages = NavigatorResizable(child: child);
+    // The side sheet route stays chromeless under a paged sheet, so its card
+    // corner and shadow are drawn here.
+    final side = type == SheetType.sideSheet;
     return Surface(
       color: _sheetColorOf(context),
-      shape: type == SheetType.bottomSheet
-          ? RoundedSuperellipseBorder(
-              borderRadius: bottomSheetRadiusOf(context),
-            )
-          : AppShape.none,
+      elevation: side ? 3 : 0,
+      shadowColor: side ? ColorScheme.of(context).shadow : null,
+      shape: switch (type) {
+        SheetType.bottomSheet => RoundedSuperellipseBorder(
+          borderRadius: bottomSheetRadiusOf(context),
+        ),
+        SheetType.sideSheet => AppShape.xl,
+        _ => AppShape.none,
+      },
       clipBehavior: Clip.antiAlias,
       child: type == SheetType.bottomSheet
           ? Stack(
@@ -177,6 +184,7 @@ class NestedPagedSheet extends StatefulWidget {
 
 class _NestedPagedSheetState extends State<NestedPagedSheet> {
   final GlobalKey<NavigatorState> _navigatorKey = GlobalKey();
+  final _sheetKey = GlobalKey();
   ValueNotifier<SheetDismissHandler?>? _dismissHandler;
 
   @override
@@ -231,6 +239,7 @@ class _NestedPagedSheetState extends State<NestedPagedSheet> {
   Widget build(BuildContext context) {
     final sheetProvider = SheetProvider.of(context)!;
     final sheet = PagedSheet(
+      key: _sheetKey,
       child: SheetPagesNavigator(
         key: _navigatorKey,
         onGenerateInitialRoutes: (_, _) => [
