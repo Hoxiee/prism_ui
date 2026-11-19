@@ -27,6 +27,7 @@ class DynamicScheme {
   final Hct sourceColorHct;
   final Variant variant;
   final bool isDark;
+  final double contrastLevel;
   final TonalPalette primaryPalette;
   final TonalPalette secondaryPalette;
   final TonalPalette tertiaryPalette;
@@ -38,6 +39,7 @@ class DynamicScheme {
     required this.sourceColorHct,
     required this.variant,
     required this.isDark,
+    this.contrastLevel = 0.0,
     required this.primaryPalette,
     required this.secondaryPalette,
     required this.tertiaryPalette,
@@ -46,58 +48,70 @@ class DynamicScheme {
   }) : sourceColorArgb = sourceColorHct.toInt(),
        errorPalette = TonalPalette.of(25.0, 84.0);
 
-  DynamicScheme.content({required Hct sourceColorHct, required bool isDark})
-    : this(
-        sourceColorHct: sourceColorHct,
-        variant: Variant.content,
-        isDark: isDark,
-        primaryPalette: TonalPalette.of(
-          sourceColorHct.hue,
-          sourceColorHct.chroma,
-        ),
-        secondaryPalette: TonalPalette.of(
-          sourceColorHct.hue,
-          math.max(sourceColorHct.chroma - 32.0, sourceColorHct.chroma * 0.5),
-        ),
-        tertiaryPalette: TonalPalette.fromHct(
-          fixIfDisliked(_analogue(sourceColorHct)),
-        ),
-        neutralPalette: TonalPalette.of(
-          sourceColorHct.hue,
-          sourceColorHct.chroma / 8.0,
-        ),
-        neutralVariantPalette: TonalPalette.of(
-          sourceColorHct.hue,
-          (sourceColorHct.chroma / 8.0) + 4.0,
-        ),
-      );
+  DynamicScheme.content({
+    required Hct sourceColorHct,
+    required bool isDark,
+    double contrastLevel = 0.0,
+  }) : this(
+         sourceColorHct: sourceColorHct,
+         variant: Variant.content,
+         isDark: isDark,
+         contrastLevel: contrastLevel,
+         primaryPalette: TonalPalette.of(
+           sourceColorHct.hue,
+           sourceColorHct.chroma,
+         ),
+         secondaryPalette: TonalPalette.of(
+           sourceColorHct.hue,
+           math.max(sourceColorHct.chroma - 32.0, sourceColorHct.chroma * 0.5),
+         ),
+         tertiaryPalette: TonalPalette.fromHct(
+           fixIfDisliked(_analogue(sourceColorHct)),
+         ),
+         neutralPalette: TonalPalette.of(
+           sourceColorHct.hue,
+           sourceColorHct.chroma / 8.0,
+         ),
+         neutralVariantPalette: TonalPalette.of(
+           sourceColorHct.hue,
+           (sourceColorHct.chroma / 8.0) + 4.0,
+         ),
+       );
 
-  DynamicScheme.tonalSpot({required Hct sourceColorHct, required bool isDark})
-    : this(
-        sourceColorHct: sourceColorHct,
-        variant: Variant.tonalSpot,
-        isDark: isDark,
-        primaryPalette: TonalPalette.of(sourceColorHct.hue, 36.0),
-        secondaryPalette: TonalPalette.of(sourceColorHct.hue, 16.0),
-        tertiaryPalette: TonalPalette.of(
-          MathUtils.sanitizeDegreesDouble(sourceColorHct.hue + 60.0),
-          24.0,
-        ),
-        neutralPalette: TonalPalette.of(sourceColorHct.hue, 6.0),
-        neutralVariantPalette: TonalPalette.of(sourceColorHct.hue, 8.0),
-      );
+  DynamicScheme.tonalSpot({
+    required Hct sourceColorHct,
+    required bool isDark,
+    double contrastLevel = 0.0,
+  }) : this(
+         sourceColorHct: sourceColorHct,
+         variant: Variant.tonalSpot,
+         isDark: isDark,
+         contrastLevel: contrastLevel,
+         primaryPalette: TonalPalette.of(sourceColorHct.hue, 36.0),
+         secondaryPalette: TonalPalette.of(sourceColorHct.hue, 16.0),
+         tertiaryPalette: TonalPalette.of(
+           MathUtils.sanitizeDegreesDouble(sourceColorHct.hue + 60.0),
+           24.0,
+         ),
+         neutralPalette: TonalPalette.of(sourceColorHct.hue, 6.0),
+         neutralVariantPalette: TonalPalette.of(sourceColorHct.hue, 8.0),
+       );
 
-  DynamicScheme.monochrome({required Hct sourceColorHct, required bool isDark})
-    : this(
-        sourceColorHct: sourceColorHct,
-        variant: Variant.monochrome,
-        isDark: isDark,
-        primaryPalette: TonalPalette.of(sourceColorHct.hue, 0.0),
-        secondaryPalette: TonalPalette.of(sourceColorHct.hue, 0.0),
-        tertiaryPalette: TonalPalette.of(sourceColorHct.hue, 0.0),
-        neutralPalette: TonalPalette.of(sourceColorHct.hue, 0.0),
-        neutralVariantPalette: TonalPalette.of(sourceColorHct.hue, 0.0),
-      );
+  DynamicScheme.monochrome({
+    required Hct sourceColorHct,
+    required bool isDark,
+    double contrastLevel = 0.0,
+  }) : this(
+         sourceColorHct: sourceColorHct,
+         variant: Variant.monochrome,
+         isDark: isDark,
+         contrastLevel: contrastLevel,
+         primaryPalette: TonalPalette.of(sourceColorHct.hue, 0.0),
+         secondaryPalette: TonalPalette.of(sourceColorHct.hue, 0.0),
+         tertiaryPalette: TonalPalette.of(sourceColorHct.hue, 0.0),
+         neutralPalette: TonalPalette.of(sourceColorHct.hue, 0.0),
+         neutralVariantPalette: TonalPalette.of(sourceColorHct.hue, 0.0),
+       );
 }
 
 /// A dark yellow-green that is not neutral reads as spoiled, so it is lightened.

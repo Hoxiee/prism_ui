@@ -119,6 +119,7 @@ class Card extends StatelessWidget {
     this.statesController,
     this.inert = false,
     this.fillsSelection = false,
+    this.holdsSelection = false,
     required this.child,
   }) : isSelected = isSelected ?? false;
 
@@ -130,6 +131,10 @@ class Card extends StatelessWidget {
   /// A selected card keeps its fill unless [fillsSelection]; callers mark it.
   final bool isSelected;
   final bool fillsSelection;
+
+  /// A selected card takes the secondary container instead of keeping its fill.
+  final bool holdsSelection;
+
   final bool isError;
   final void Function()? onPressed;
   final Widget child;
@@ -176,6 +181,8 @@ class Card extends StatelessWidget {
 
   bool get _filled => isSelected && fillsSelection;
 
+  bool get _held => isSelected && holdsSelection;
+
   ({Color text, Color icon}) _contentColorsOf(ColorScheme colorScheme) {
     if (onPressed == null && !inert) {
       final disabled = colorScheme.onSurface.opacity38;
@@ -190,7 +197,24 @@ class Card extends StatelessWidget {
     if (_filled) {
       return (text: colorScheme.onPrimary, icon: colorScheme.onPrimary);
     }
+    if (_held) {
+      return (
+        text: colorScheme.onSecondaryContainer,
+        icon: colorScheme.onSecondaryContainer,
+      );
+    }
     return (text: colorScheme.onSurfaceVariant, icon: colorScheme.primary);
+  }
+
+  Color _unselectedFill(
+    BuildContext context,
+    SurfaceLevel level,
+    ColorScheme colorScheme,
+  ) {
+    final fill = level.colorOf(colorScheme);
+    return level == SurfaceLevel.card
+        ? CardFillScope.apply(context, fill)
+        : fill;
   }
 
   @override
@@ -203,10 +227,11 @@ class Card extends StatelessWidget {
       fill: switch ((isError, _filled)) {
         (true, _) => colorScheme.errorContainer,
         (_, true) => colorScheme.primary,
-        _ => level.colorOf(colorScheme),
+        _ when _held => colorScheme.secondaryContainer.opacity80,
+        _ => _unselectedFill(context, level, colorScheme),
       },
       shape: shape ?? AppShape.all(radius ?? AppCorner.md),
-      inkColor: _filled ? content.text : null,
+      inkColor: _filled || _held ? content.text : null,
       ringColor: isError ? colorScheme.error : null,
       padding: paddingOf(context, padding ?? EdgeInsets.zero),
       minimum: minimumOf(context),

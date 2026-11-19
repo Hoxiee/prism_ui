@@ -22,16 +22,27 @@ enum ColorStyle {
   };
 }
 
+enum ColorContrast {
+  standard(0),
+  medium(0.5),
+  high(1);
+
+  const ColorContrast(this.level);
+
+  final double level;
+}
+
 /// `.agents/surfaces.md` explains why each role this replaces leaves
 /// Material's value.
 ColorScheme seededColorScheme({
   required Color seedColor,
   required Brightness brightness,
   ColorStyle style = ColorStyle.vivid,
+  ColorContrast contrast = ColorContrast.standard,
 }) {
   final dark = brightness == Brightness.dark;
   final source = Hct.fromInt(seedColor.toARGB32());
-  final scheme = _dynamicScheme(source, dark, style);
+  final scheme = _dynamicScheme(source, dark, style, contrast.level);
   final primary = scheme.primaryPalette;
   final container = TonalPalette.of(
     primary.hue,
@@ -54,9 +65,13 @@ ColorScheme seededColorScheme({
   Color role(DynamicColor color) => Color(color.getArgb(scheme));
 
   final paperChroma = dark ? _surfaceChroma : _paperChroma;
+  // The seed-true accent sits at whatever tone the seed has, which a raised
+  // contrast cannot move, so contrast takes the scheme's own primary.
   final accent = switch (style) {
-    ColorStyle.vivid || ColorStyle.tinted => _accent(seedColor, source, dark),
-    ColorStyle.soft || ColorStyle.monochrome => null,
+    ColorStyle.vivid || ColorStyle.tinted
+        when contrast == ColorContrast.standard =>
+      _accent(seedColor, source, dark),
+    _ => null,
   };
   final primaryColor = accent?.primary ?? role(MaterialDynamicColors.primary);
   return ColorScheme(
@@ -195,16 +210,23 @@ DynamicScheme? _lastScheme;
 // Palettes do not depend on brightness, and a seed's light and dark schemes
 // are built one after the other, so the second takes the first one's rather
 // than running the content variant's temperature analysis again.
-DynamicScheme _dynamicScheme(Hct source, bool dark, ColorStyle style) {
+DynamicScheme _dynamicScheme(
+  Hct source,
+  bool dark,
+  ColorStyle style,
+  double contrastLevel,
+) {
   final last = _lastScheme;
   final scheme =
       last != null &&
           last.sourceColorArgb == source.toInt() &&
-          last.variant == style._variant
+          last.variant == style._variant &&
+          last.contrastLevel == contrastLevel
       ? DynamicScheme(
           sourceColorHct: source,
           variant: last.variant,
           isDark: dark,
+          contrastLevel: contrastLevel,
           primaryPalette: last.primaryPalette,
           secondaryPalette: last.secondaryPalette,
           tertiaryPalette: last.tertiaryPalette,
@@ -215,14 +237,17 @@ DynamicScheme _dynamicScheme(Hct source, bool dark, ColorStyle style) {
           ColorStyle.vivid || ColorStyle.tinted => DynamicScheme.content(
             sourceColorHct: source,
             isDark: dark,
+            contrastLevel: contrastLevel,
           ),
           ColorStyle.soft => DynamicScheme.tonalSpot(
             sourceColorHct: source,
             isDark: dark,
+            contrastLevel: contrastLevel,
           ),
           ColorStyle.monochrome => DynamicScheme.monochrome(
             sourceColorHct: source,
             isDark: dark,
+            contrastLevel: contrastLevel,
           ),
         };
   return _lastScheme = scheme;

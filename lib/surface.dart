@@ -34,6 +34,25 @@ enum SurfaceLevel {
   }
 }
 
+/// Lets an app change the fill of cards on the page level, such as to let a
+/// wallpaper show through; none leaves the fill as it is.
+class CardFillScope extends InheritedWidget {
+  const CardFillScope({super.key, this.transform, required super.child});
+
+  final Color Function(BuildContext context, Color fill)? transform;
+
+  static Color apply(BuildContext context, Color fill) =>
+      context
+          .dependOnInheritedWidgetOfExactType<CardFillScope>()
+          ?.transform
+          ?.call(context, fill) ??
+      fill;
+
+  @override
+  bool updateShouldNotify(CardFillScope oldWidget) =>
+      transform != oldWidget.transform;
+}
+
 class SurfaceScope extends StatelessWidget {
   const SurfaceScope({super.key, required this.level, required this.child});
 
@@ -105,7 +124,9 @@ class ElevatedSurfaceTheme extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _ElevatedSurfaceScope(
-      child: Theme(data: Theme.of(context).elevated, child: child),
+      child: CardFillScope(
+        child: Theme(data: Theme.of(context).elevated, child: child),
+      ),
     );
   }
 }
