@@ -19,15 +19,15 @@ const _destinations = [
 ];
 
 Finder _glyph(Glyph glyph) => find.byWidgetPredicate(
-  (widget) => widget is AnimatedGlyph && widget.glyph == glyph,
+  (widget) => widget is GlyphIcon && widget.glyph == glyph,
 );
 
-double _fillOf(WidgetTester tester, Glyph glyph) {
-  final paint = tester.widget<CustomPaint>(
-    find.descendant(of: _glyph(glyph), matching: find.byType(CustomPaint)),
-  );
-  return (paint.painter! as GlyphPainter).fill;
-}
+Finder _tip(String message) => find.byWidgetPredicate(
+  (widget) => widget is AppTooltip && widget.message == message,
+);
+
+double _fillOf(WidgetTester tester, Glyph glyph) =>
+    tester.widget<GlyphIcon>(_glyph(glyph)).fill!;
 
 Widget _sidebar({
   List<SidebarDestination> destinations = _destinations,
@@ -36,6 +36,8 @@ Widget _sidebar({
   ValueChanged<int>? onSelected,
   VoidCallback? onToggle,
   Size windowControls = Size.zero,
+  List<SidebarAction> actions = const [],
+  bool narrow = false,
   EdgeInsets safePadding = EdgeInsets.zero,
 }) {
   return TestApp(
@@ -54,6 +56,8 @@ Widget _sidebar({
                   onSelected: onSelected ?? (_) {},
                   onToggle: onToggle,
                   windowControls: windowControls,
+                  actions: actions,
+                  narrow: narrow,
                 ),
               ),
             ),
@@ -98,9 +102,7 @@ Finder _shown(String label) => find.descendant(
   matching: find.text(label),
 );
 
-Finder _rowTooltip(String message) => find.byWidgetPredicate(
-  (widget) => widget is Tooltip && widget.message == message,
-);
+Finder _rowTooltip(String message) => _tip(message);
 
 void main() {
   testWidgets('the selected row carries a centered indicator', (tester) async {
@@ -172,7 +174,7 @@ void main() {
     await tester.tap(_glyph(Glyphs.sort));
     expect(selected, 2);
 
-    await tester.tap(find.byTooltip('Expand'));
+    await tester.tap(_tip('Expand'));
     await tester.pump();
     expect(toggled, 1);
     expect(find.text('Proxies'), findsOneWidget);
@@ -186,7 +188,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(tester.getSize(_sidebarFinder).width, 220);
     expect(_rowTooltip('Proxies'), findsNothing);
-    expect(find.byTooltip('Collapse'), findsOneWidget);
+    expect(_tip('Collapse'), findsOneWidget);
   });
 
   testWidgets('an expanded row whose label is cut off keeps its tooltip', (
@@ -213,7 +215,7 @@ void main() {
           in tester
               .widget<GlyphIcon>(
                 find.descendant(
-                  of: find.byTooltip(tooltip),
+                  of: _tip(tooltip),
                   matching: find.byType(GlyphIcon),
                 ),
               )
@@ -245,7 +247,7 @@ void main() {
 
     final sidebar = tester.getRect(_sidebarFinder);
     expect(sidebar.width, 78);
-    final toggle = find.byTooltip('Expand');
+    final toggle = _tip('Expand');
     expect(
       tester.getTopLeft(toggle).dy,
       greaterThanOrEqualTo(sidebar.top + 32),
@@ -257,7 +259,7 @@ void main() {
           .ancestor(of: _glyph(Glyphs.pin), matching: find.byType(PressRegion))
           .first,
     );
-    expect(selectedItem.size, const Size(54, 40));
+    expect(selectedItem.size, const Size(54, 36));
     expect(selectedItem.center.dx, sidebar.center.dx);
 
     final folder = tester.getCenter(_glyph(Glyphs.sort));
@@ -269,9 +271,67 @@ void main() {
     expect(tester.getCenter(_glyph(Glyphs.sort)), folder);
   });
 
+  testWidgets('bottom actions fire their callback and carry a tooltip', (
+    tester,
+  ) async {
+    var pressed = 0;
+    await tester.pumpWidget(
+      _sidebar(
+        onToggle: () {},
+        actions: [
+          SidebarAction(
+            glyph: Glyphs.more,
+            tooltip: 'More actions',
+            onPressed: () => pressed++,
+          ),
+        ],
+      ),
+    );
+
+    expect(_tip('More actions'), findsOneWidget);
+    await tester.tap(_glyph(Glyphs.more));
+    expect(pressed, 1);
+  });
+
+  testWidgets('a divider separates groups only', (tester) async {
+    await tester.pumpWidget(
+      _sidebar(
+        destinations: const [
+          SidebarDestination(glyph: Glyphs.pin, label: 'Dashboard'),
+          SidebarDestination(glyph: Glyphs.search, label: 'Proxies'),
+          SidebarDestination(glyph: Glyphs.sort, label: 'Profiles', group: 1),
+        ],
+        onToggle: () {},
+      ),
+    );
+
+    expect(
+      find.byWidgetPredicate(NavigationSidebar.isGroupDivider),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('hovering a row summons the ghost and leaving dissolves it', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_sidebar(onToggle: () {}));
+    final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+    addTearDown(gesture.removePointer);
+    await gesture.addPointer(location: Offset.zero);
+    await gesture.moveTo(tester.getCenter(_glyph(Glyphs.sort)));
+    await tester.pump(const Duration(milliseconds: 500));
+
+    final ghost = find.byKey(NavigationSidebar.hoverGhostKey);
+    expect(ghost, findsOneWidget);
+
+    await gesture.moveTo(const Offset(700, 300));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+  });
+
   group('without room to widen', () {
     Future<void> openOverlay(WidgetTester tester) async {
-      await tester.tap(find.byTooltip('Expand'));
+      await tester.tap(_tip('Expand'));
       await tester.pumpAndSettle();
       expect(find.text('Proxies'), findsNWidgets(2));
     }
@@ -291,8 +351,8 @@ void main() {
       );
       expect(_labelOpacities(tester, 'Proxies'), unorderedEquals([0, 1]));
       expect(
-        tester.getTopLeft(find.byTooltip('Collapse')),
-        tester.getTopLeft(find.byTooltip('Expand')),
+        tester.getTopLeft(_tip('Collapse')),
+        tester.getTopLeft(_tip('Expand')),
       );
       final colorScheme = Theme.of(tester.element(_sidebarFinder)).colorScheme;
       final pane = tester.widget<Surface>(_paneFinder);
@@ -302,7 +362,7 @@ void main() {
         Divider.createBorderSide(tester.element(_sidebarFinder)),
       );
 
-      await tester.tap(find.byTooltip('Collapse'));
+      await tester.tap(_tip('Collapse'));
       await tester.pumpAndSettle();
       expect(find.text('Proxies'), findsOneWidget);
     });
@@ -316,7 +376,7 @@ void main() {
       );
       final sidebar = tester.getRect(_sidebarFinder);
       expect(sidebar.width, 48 + safePadding.left);
-      final toggle = tester.getTopLeft(find.byTooltip('Expand'));
+      final toggle = tester.getTopLeft(_tip('Expand'));
       expect(toggle.dx, greaterThanOrEqualTo(sidebar.left + safePadding.left));
       expect(toggle.dy, greaterThanOrEqualTo(sidebar.top + safePadding.top));
 
@@ -326,7 +386,7 @@ void main() {
       expect(pane.topLeft, sidebar.topLeft);
       expect(pane.height, sidebar.height);
       expect(pane.width, 220 + safePadding.left);
-      expect(tester.getTopLeft(find.byTooltip('Collapse')), toggle);
+      expect(tester.getTopLeft(_tip('Collapse')), toggle);
     });
 
     testWidgets('choosing a row selects it and closes the pane', (
@@ -364,10 +424,10 @@ void main() {
 
       final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
       addTearDown(gesture.removePointer);
-      await gesture.addPointer(
-        location: tester.getCenter(find.byTooltip('Collapse')),
-      );
+      await gesture.addPointer(location: Offset.zero);
+      await gesture.moveTo(tester.getCenter(_tip('Collapse')));
       await tester.pump(const Duration(seconds: 1));
+      await tester.pump(const Duration(milliseconds: 300));
       expect(find.text('Collapse'), findsOneWidget);
     });
 

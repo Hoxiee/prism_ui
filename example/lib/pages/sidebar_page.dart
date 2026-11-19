@@ -3,7 +3,6 @@ import 'package:prism_ui/icons/icons.dart';
 import 'package:prism_ui/prism_ui.dart';
 
 import '../common.dart';
-import '../reclash_sidebar.dart';
 
 const _labels = ['Overview', 'Search', 'Pinned', 'Sorting', 'Copies', 'More'];
 const _glyphs = [
@@ -24,72 +23,33 @@ class SidebarPage extends StatefulWidget {
 }
 
 class _SidebarPageState extends State<SidebarPage> {
-  var _prismSelected = 0;
-  var _reclashSelected = 0;
-  var _prismExpanded = true;
-  var _reclashExpanded = true;
+  var _selected = 0;
+  var _expanded = true;
   var _overlay = false;
   var _narrow = false;
   var _last = 'none yet';
-
-  void _selectNext() => setState(() {
-    _prismSelected = (_prismSelected + 1) % _labels.length;
-    _reclashSelected = (_reclashSelected + 1) % _labels.length;
-  });
-
-  void _toggleBoth() => setState(() {
-    final expanded = !(_prismExpanded && _reclashExpanded);
-    _prismExpanded = expanded;
-    _reclashExpanded = expanded;
-  });
-
-  Widget _frame(String title, int selected, Widget sidebar) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      spacing: 8,
-      children: [
-        Text(title, style: AppTextStyle.headline.of(context)),
-        Panel(
-          child: SizedBox(
-            height: 430,
-            child: Row(
-              children: [
-                sidebar,
-                Expanded(
-                  child: Center(
-                    child: Text(
-                      _labels[selected],
-                      style: AppTextStyle.title2.of(context),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
     return PageBody(
       children: [
         const Note(
-          'Hover the rows to see the hover treatment, click to change the '
-          'selection, use the toggle at the top of each pane to expand or '
+          'Hover the rows to see the hover ghost, click to change the '
+          'selection, use the toggle at the top of the pane to expand or '
           'collapse. With overlay mode on the toggle opens the pane over the '
           'content instead of widening it.',
         ),
         Controls(
           children: [
             FilledButton(
-              onPressed: _selectNext,
-              child: const Text('Select next in both'),
+              onPressed: () => setState(
+                () => _selected = (_selected + 1) % _labels.length,
+              ),
+              child: const Text('Select next'),
             ),
             TextButton(
-              onPressed: _toggleBoth,
-              child: const Text('Expand / collapse both'),
+              onPressed: () => setState(() => _expanded = !_expanded),
+              child: const Text('Expand / collapse'),
             ),
             LabeledSwitch(
               label: 'Overlay toggle',
@@ -97,43 +57,22 @@ class _SidebarPageState extends State<SidebarPage> {
               onChanged: (value) => setState(() => _overlay = value),
             ),
             LabeledSwitch(
-              label: 'Reclash narrow',
+              label: 'Narrow',
               value: _narrow,
               onChanged: (value) => setState(() => _narrow = value),
             ),
-            Text('Last Reclash action: $_last'),
+            Text('Last action: $_last'),
           ],
         ),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          spacing: 24,
-          children: [
-            Expanded(
-              child: _frame(
-                'prism NavigationSidebar',
-                _prismSelected,
+        Panel(
+          child: SizedBox(
+            height: 430,
+            child: Row(
+              children: [
                 NavigationSidebar(
                   destinations: [
                     for (var i = 0; i < _labels.length; i++)
-                      SidebarDestination(glyph: _glyphs[i], label: _labels[i]),
-                  ],
-                  selectedIndex: _prismSelected,
-                  expanded: _prismExpanded,
-                  onSelected: (index) => setState(() => _prismSelected = index),
-                  onToggle: _overlay
-                      ? null
-                      : () => setState(() => _prismExpanded = !_prismExpanded),
-                ),
-              ),
-            ),
-            Expanded(
-              child: _frame(
-                'ReclashSidebar (port)',
-                _reclashSelected,
-                ReclashSidebar(
-                  destinations: [
-                    for (var i = 0; i < _labels.length; i++)
-                      ReclashSidebarDestination(
+                      SidebarDestination(
                         glyph: _glyphs[i],
                         label: _labels[i],
                         group: _groups[i],
@@ -141,30 +80,36 @@ class _SidebarPageState extends State<SidebarPage> {
                       ),
                   ],
                   actions: [
-                    ReclashSidebarAction(
+                    SidebarAction(
                       glyph: Glyphs.search,
                       tooltip: 'Search',
                       onPressed: () => setState(() => _last = 'Search'),
                     ),
-                    ReclashSidebarAction(
+                    SidebarAction(
                       glyph: Glyphs.more,
                       tooltip: 'More',
                       onPressed: () => setState(() => _last = 'More'),
                     ),
                   ],
-                  selectedIndex: _reclashSelected,
-                  expanded: _reclashExpanded,
+                  selectedIndex: _selected,
+                  expanded: _expanded,
                   narrow: _narrow,
-                  onSelected: (index) =>
-                      setState(() => _reclashSelected = index),
+                  onSelected: (index) => setState(() => _selected = index),
                   onToggle: _overlay
                       ? null
-                      : () =>
-                            setState(() => _reclashExpanded = !_reclashExpanded),
+                      : () => setState(() => _expanded = !_expanded),
                 ),
-              ),
+                Expanded(
+                  child: Center(
+                    child: Text(
+                      _labels[_selected],
+                      style: AppTextStyle.title2.of(context),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ],
     );
