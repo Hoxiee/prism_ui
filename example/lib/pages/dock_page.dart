@@ -63,6 +63,9 @@ class _DockPageState extends State<DockPage> {
               padding: const EdgeInsets.only(bottom: 16),
               child: SizedBox(
                 width: compact ? 280 : 450,
+                height: compact
+                    ? TonalButtonSize.section.button + 8
+                    : NavigationDock.heightOf(context),
                 child: FloatingNavigationBar(
                   destinations: _dock,
                   selectedIndex: _index,

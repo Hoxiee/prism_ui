@@ -44,7 +44,13 @@ class _CardsPageState extends State<CardsPage> {
                   spacing: 4,
                   children: [
                     GlyphIcon(_rows[i].$3),
-                    Text(_rows[i].$1, style: AppTextStyle.headline.of(context)),
+                    Text(
+                      _rows[i].$1,
+                      style: TextStyle(
+                        fontSize: AppTextStyle.headline.size,
+                        fontWeight: AppTextStyle.headline.weight,
+                      ),
+                    ),
                     Text(i == _cardSelected ? 'Selected' : 'Press to select'),
                   ],
                 ),

@@ -170,6 +170,7 @@ final _states = <(String page, String state, _Steps steps)>[
     'slots',
     (t) async {
       await _tap(t, find.byKey(const ValueKey('motion-slot-add')));
+      await t.pump();
       await t.pump(const Duration(milliseconds: 700));
     },
   ),

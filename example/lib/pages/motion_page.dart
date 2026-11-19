@@ -275,7 +275,12 @@ class _MotionPageState extends State<MotionPage> with TickerProviderStateMixin {
                             color: color,
                             shape: AppShape.all(14),
                           ),
-                          child: Text('${slot.key}'),
+                          child: Text(
+                            '${slot.key}',
+                            style: TextStyle(
+                              color: context.colorScheme.onPrimary,
+                            ),
+                          ),
                         ),
                       ),
                     ),
