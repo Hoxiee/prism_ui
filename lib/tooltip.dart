@@ -113,6 +113,66 @@ abstract final class AppTooltipTiming {
   static const touch = Duration(seconds: 4);
 }
 
+/// What an [AppTooltip] is drawn with, so a host can reuse it for its own
+/// overlays.
+class AppTooltipThemeData {
+  const AppTooltipThemeData({
+    required this.constraints,
+    required this.padding,
+    required this.margin,
+    required this.textStyle,
+    required this.decoration,
+  });
+
+  final BoxConstraints constraints;
+  final EdgeInsetsGeometry padding;
+  final EdgeInsetsGeometry margin;
+  final TextStyle textStyle;
+  final ShapeDecoration decoration;
+}
+
+AppTooltipThemeData appTooltipTheme(ThemeData theme) {
+  final colors = theme.colorScheme;
+  return AppTooltipThemeData(
+    constraints: const BoxConstraints(minHeight: 32, maxWidth: 300),
+    padding: const EdgeInsets.symmetric(
+      horizontal: _tooltipSidePadding,
+      vertical: _tooltipGap,
+    ),
+    margin: const EdgeInsets.all(_tooltipGap),
+    textStyle: theme.footnoteText.copyWith(
+      color: colors.onSurface,
+      fontSize: 13,
+      height: 1.35,
+      fontWeight: FontWeight.w500,
+    ),
+    decoration: ShapeDecoration(
+      color: colors.surfaceContainerHigh,
+      shape: _TooltipShape(
+        side: BorderSide(color: colors.outlineVariant.withValues(alpha: 0.7)),
+      ),
+      shadows: [
+        BoxShadow(
+          color: colors.shadow.withValues(
+            alpha: colors.brightness == Brightness.dark ? 0.24 : 0.1,
+          ),
+          blurRadius: 18,
+          offset: const Offset(0, 4),
+        ),
+      ],
+    ),
+  );
+}
+
+extension AppTooltipWidget on Widget {
+  /// Wraps this widget in an [AppTooltip]; a null or empty [message] leaves it
+  /// as it is.
+  Widget withAppTooltip(String? message) {
+    if (message == null || message.isEmpty) return this;
+    return AppTooltip(message: message, child: this);
+  }
+}
+
 class _TooltipShape extends OutlinedBorder {
   const _TooltipShape({super.side});
 
@@ -297,44 +357,18 @@ class _AppTooltipState extends State<AppTooltip>
       _nativeAnimation?.removeStatusListener(_nativeStatusChanged);
       _nativeAnimation = animation..addStatusListener(_nativeStatusChanged);
     }
-    final colors = Theme.of(context).colorScheme;
+    final theme = appTooltipTheme(Theme.of(context));
     final surface = Padding(
-      padding: const EdgeInsets.all(_tooltipGap),
+      padding: theme.margin,
       child: ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: 32, maxWidth: 300),
+        constraints: theme.constraints,
         child: DecoratedBox(
-          decoration: ShapeDecoration(
-            color: colors.surfaceContainerHigh,
-            shape: _TooltipShape(
-              side: BorderSide(
-                color: colors.outlineVariant.withValues(alpha: 0.7),
-              ),
-            ),
-            shadows: [
-              BoxShadow(
-                color: colors.shadow.withValues(
-                  alpha: colors.brightness == Brightness.dark ? 0.24 : 0.1,
-                ),
-                blurRadius: 18,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
+          decoration: theme.decoration,
           child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: _tooltipSidePadding,
-              vertical: _tooltipGap,
-            ),
+            padding: theme.padding,
             child: Text(
               widget.message!,
-              style: AppTextStyle.footnote
-                  .of(context)
-                  .copyWith(
-                    color: colors.onSurface,
-                    fontSize: 13,
-                    height: 1.35,
-                    fontWeight: FontWeight.w500,
-                  ),
+              style: theme.textStyle,
               softWrap: true,
             ),
           ),

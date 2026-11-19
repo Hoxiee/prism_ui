@@ -56,10 +56,7 @@ class _TooltipsPageState extends State<TooltipsPage>
               mainAxisSize: MainAxisSize.min,
               spacing: 12,
               children: [
-                Text(
-                  'Pushed route',
-                  style: AppTextStyle.title2.of(context),
-                ),
+                Text('Pushed route', style: AppTextStyle.title2.of(context)),
                 FilledButton(
                   onPressed: () => Navigator.of(context).pop(),
                   child: const Text('Pop'),
@@ -112,6 +109,8 @@ class _TooltipsPageState extends State<TooltipsPage>
                         child: const Text('AppTooltip'),
                       ),
                     ),
+                    const Text('withAppTooltip')
+                        .withAppTooltip('Added by the theme helper'),
                     Tooltip(
                       message: 'Prism Tooltip',
                       triggerMode: TooltipTriggerMode.tap,
@@ -136,10 +135,7 @@ class _TooltipsPageState extends State<TooltipsPage>
               Controls(
                 children: [
                   for (final path in _paths)
-                    TextButton(
-                      onPressed: () => _go(path),
-                      child: Text(path),
-                    ),
+                    TextButton(onPressed: () => _go(path), child: Text(path)),
                 ],
               ),
               Panel(
@@ -154,9 +150,8 @@ class _TooltipsPageState extends State<TooltipsPage>
                       progress: _controller.value,
                       previousStyle: AppTextStyle.headline.of(context),
                       style: AppTextStyle.headline.of(context),
-                      onSelect: (index) => setState(
-                        () => _clicked = _title.split(' › ')[index],
-                      ),
+                      onSelect: (index) =>
+                          setState(() => _clicked = _title.split(' › ')[index]),
                     ),
                   ),
                 ),

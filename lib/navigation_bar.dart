@@ -2,6 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:prism_ui/context.dart';
 import 'package:prism_ui/motion.dart';
+import 'package:prism_ui/navigation_dock.dart'
+    show NavigationDestinationLabelBehavior;
 import 'package:prism_ui/press_region.dart';
 import 'package:prism_ui/shape.dart';
 import 'package:prism_ui/surface.dart';
@@ -21,11 +23,13 @@ class NavigationBar extends StatelessWidget {
     required this.destinations,
     required this.selectedIndex,
     required this.onDestinationSelected,
+    this.labelBehavior = NavigationDestinationLabelBehavior.alwaysShow,
   });
 
   final List<NavigationDestination> destinations;
   final int selectedIndex;
   final ValueChanged<int> onDestinationSelected;
+  final NavigationDestinationLabelBehavior labelBehavior;
 
   static const _height = 80.0;
 
@@ -44,6 +48,7 @@ class NavigationBar extends StatelessWidget {
                   child: _Destination(
                     destination: destination,
                     selected: index == selectedIndex,
+                    labelBehavior: labelBehavior,
                     onTap: () => onDestinationSelected(index),
                   ),
                 ),
@@ -59,11 +64,13 @@ class _Destination extends StatelessWidget {
   const _Destination({
     required this.destination,
     required this.selected,
+    required this.labelBehavior,
     required this.onTap,
   });
 
   final NavigationDestination destination;
   final bool selected;
+  final NavigationDestinationLabelBehavior labelBehavior;
   final VoidCallback onTap;
 
   static const _indicator = Size(64, 32);
@@ -73,9 +80,15 @@ class _Destination extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = context.colorScheme;
     final floating = SurfaceLevel.floatingOf(colorScheme);
+    final showLabel = switch (labelBehavior) {
+      NavigationDestinationLabelBehavior.alwaysShow => true,
+      NavigationDestinationLabelBehavior.alwaysHide => false,
+      NavigationDestinationLabelBehavior.onlyShowSelected => selected,
+    };
     return Semantics(
       button: true,
       selected: selected,
+      label: showLabel ? null : destination.label,
       container: true,
       child: PressRegion(
         onTap: onTap,
@@ -118,18 +131,19 @@ class _Destination extends StatelessWidget {
                 ],
               ),
             ),
-            Text(
-              destination.label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: AppTextStyle.caption1
-                  .of(context, emphasized: true)
-                  .copyWith(
-                    color: selected
-                        ? colorScheme.onSurface
-                        : colorScheme.onSurfaceVariant,
-                  ),
-            ),
+            if (showLabel)
+              Text(
+                destination.label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTextStyle.caption1
+                    .of(context, emphasized: true)
+                    .copyWith(
+                      color: selected
+                          ? colorScheme.onSurface
+                          : colorScheme.onSurfaceVariant,
+                    ),
+              ),
           ],
         ),
       ),
@@ -159,11 +173,13 @@ class AnimatedNavigationBar extends StatelessWidget {
     required this.destinations,
     required this.selectedIndex,
     required this.onSelected,
+    this.labelBehavior = NavigationDestinationLabelBehavior.alwaysShow,
   });
 
   final List<NavigationBarEntry> destinations;
   final int selectedIndex;
   final ValueChanged<int> onSelected;
+  final NavigationDestinationLabelBehavior labelBehavior;
 
   @override
   Widget build(BuildContext context) {
@@ -185,6 +201,7 @@ class AnimatedNavigationBar extends StatelessWidget {
                 ],
                 selectedIndex: selectedIndex.clamp(0, destinations.length - 1),
                 onDestinationSelected: onSelected,
+                labelBehavior: labelBehavior,
               ),
               Positioned.fill(
                 child: IgnorePointer(

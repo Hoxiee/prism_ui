@@ -2194,7 +2194,12 @@ class _FloatingBarItemState extends State<_FloatingBarItem> {
             ),
           ),
           child: widget.tooltip
-              ? Tooltip(message: widget.destination.label, child: content)
+              ? widget.compact
+                    ? AppTooltip(
+                        message: widget.destination.label,
+                        child: content,
+                      )
+                    : Tooltip(message: widget.destination.label, child: content)
               : content,
         ),
       ),

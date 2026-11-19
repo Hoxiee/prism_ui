@@ -61,12 +61,15 @@ class _DockPageState extends State<DockPage> {
             alignment: Alignment.bottomCenter,
             child: Padding(
               padding: const EdgeInsets.only(bottom: 16),
-              child: FloatingNavigationBar(
-                destinations: _dock,
-                selectedIndex: _index,
-                onSelected: (index) => setState(() => _selected = index),
-                labelBehavior: _labels,
-                compact: compact,
+              child: SizedBox(
+                width: compact ? 280 : 450,
+                child: FloatingNavigationBar(
+                  destinations: _dock,
+                  selectedIndex: _index,
+                  onSelected: (index) => setState(() => _selected = index),
+                  labelBehavior: _labels,
+                  compact: compact,
+                ),
               ),
             ),
           ),
@@ -83,10 +86,7 @@ class _DockPageState extends State<DockPage> {
           children: [
             for (final name in _sets.keys)
               name == _set
-                  ? FilledButton(
-                      onPressed: () {},
-                      child: Text('Set: $name'),
-                    )
+                  ? FilledButton(onPressed: () {}, child: Text('Set: $name'))
                   : TextButton(
                       onPressed: () => setState(() => _set = name),
                       child: Text('Set: $name'),
@@ -115,6 +115,7 @@ class _DockPageState extends State<DockPage> {
               'with a divider where the group changes.',
           child: Panel(
             child: AnimatedNavigationBar(
+              labelBehavior: _labels,
               destinations: [
                 for (final (index, (label, glyph)) in _items.indexed)
                   NavigationBarEntry(
