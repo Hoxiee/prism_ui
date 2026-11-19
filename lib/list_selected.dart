@@ -63,6 +63,20 @@ class _DecorationListItemState extends State<DecorationListItem> {
     final sorting = sortable?.sorting ?? false;
     final position = ItemPositionProvider.of(context)?.position;
     final isEnd = _isEnd(position);
+    final filled =
+        widget.isSelected == true && widget.fillsSelection && !widget.invalid;
+    final onFill = context.colorScheme.onPrimary;
+    // A row sets its own text and icon colors, so a primary fill needs its
+    // contrast passed down.
+    Widget? contrast(Widget? child) => !filled || child == null
+        ? child
+        : DefaultTextStyle.merge(
+            style: TextStyle(color: onFill),
+            child: IconTheme.merge(
+              data: IconThemeData(color: onFill),
+              child: child,
+            ),
+          );
     final row = _ListRowSeparator(
       separated: !proxyDecorator && !isEnd,
       emphasized: widget.invalid,
@@ -83,18 +97,22 @@ class _DecorationListItemState extends State<DecorationListItem> {
             final tile = ListRow(
               leading: widget.leading == null
                   ? null
-                  : IgnorePointer(ignoring: sorting, child: widget.leading),
+                  : contrast(
+                      IgnorePointer(ignoring: sorting, child: widget.leading),
+                    ),
               padding:
                   widget.contentPadding ??
                   const EdgeInsets.only(right: 16, left: 16),
-              title: _ListRowSeparatorStart(child: widget.title),
-              subtitle: widget.subtitle,
+              title: contrast(_ListRowSeparatorStart(child: widget.title))!,
+              subtitle: contrast(widget.subtitle),
               minVerticalPadding:
                   widget.minVerticalPadding ?? listRowVerticalPadding,
               horizontalTitleGap: widget.horizontalTitleGap,
-              trailing: sortable == null
-                  ? widget.trailing
-                  : SortableTrailing(item: sortable, child: widget.trailing),
+              trailing: contrast(
+                sortable == null
+                    ? widget.trailing
+                    : SortableTrailing(item: sortable, child: widget.trailing),
+              ),
             );
             if (constraints.maxHeight >= double.infinity) {
               return tile;
