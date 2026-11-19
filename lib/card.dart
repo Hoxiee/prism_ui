@@ -217,13 +217,31 @@ class Card extends StatelessWidget {
         : fill;
   }
 
+  /// The layer a hovered or focused held card shows; a press is the ink's.
+  @visibleForTesting
+  static const heldOverlayKey = ValueKey<String>('prism.card.heldOverlay');
+
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final content = _contentColorsOf(theme.colorScheme);
+    final card = _held
+        ? _HeldOverlay(
+            statesController: statesController,
+            shape: shape ?? AppShape.all(radius ?? AppCorner.md),
+            color: content.text,
+            builder: (states) => _surface(context, states),
+          )
+        : _surface(context, statesController);
+    return enterAnimated ? FadeScaleEnterBox(child: card) : card;
+  }
+
+  Widget _surface(BuildContext context, WidgetStatesController? states) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final level = context.raisedSurfaceLevel;
     final content = _contentColorsOf(colorScheme);
-    final card = PressSurface(
+    return PressSurface(
       fill: switch ((isError, _filled)) {
         (true, _) => colorScheme.errorContainer,
         (_, true) => colorScheme.primary,
@@ -239,7 +257,9 @@ class Card extends StatelessWidget {
       onPressed: onPressed,
       inert: inert,
       selected: isSelected,
-      statesController: statesController,
+      statesController: states,
+      reportsHover: _held,
+      showsHover: !_held,
       onKeyEvent: enterActionsOnRight ? _enterActionOnRight : null,
       child: DefaultTextStyle(
         style: AppTextStyle.subheadline
@@ -253,7 +273,6 @@ class Card extends StatelessWidget {
         ),
       ),
     );
-    return enterAnimated ? FadeScaleEnterBox(child: card) : card;
   }
 
   static KeyEventResult _enterActionOnRight(FocusNode _, KeyEvent event) {
@@ -280,6 +299,74 @@ class Card extends StatelessWidget {
     return focusNode.nextFocus()
         ? KeyEventResult.handled
         : KeyEventResult.ignored;
+  }
+}
+
+class _HeldOverlay extends StatefulWidget {
+  const _HeldOverlay({
+    required this.statesController,
+    required this.shape,
+    required this.color,
+    required this.builder,
+  });
+
+  final WidgetStatesController? statesController;
+  final OutlinedBorder shape;
+  final Color color;
+  final Widget Function(WidgetStatesController states) builder;
+
+  @override
+  State<_HeldOverlay> createState() => _HeldOverlayState();
+}
+
+class _HeldOverlayState extends State<_HeldOverlay> {
+  static const _hoverAlpha = 0.08;
+  static const _focusAlpha = 0.1;
+
+  final _own = WidgetStatesController();
+
+  WidgetStatesController get _states => widget.statesController ?? _own;
+
+  @override
+  void dispose() {
+    _own.dispose();
+    super.dispose();
+  }
+
+  double _alphaOf(Set<WidgetState> states) {
+    if (states.contains(WidgetState.hovered)) {
+      return _hoverAlpha;
+    }
+    return states.contains(WidgetState.focused) ? _focusAlpha : 0;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        widget.builder(_states),
+        Positioned.fill(
+          child: IgnorePointer(
+            child: ListenableBuilder(
+              listenable: _states,
+              builder: (context, _) {
+                final alpha = _alphaOf(_states.value);
+                if (alpha == 0) {
+                  return const SizedBox.shrink();
+                }
+                return DecoratedBox(
+                  key: Card.heldOverlayKey,
+                  decoration: ShapeDecoration(
+                    shape: widget.shape,
+                    color: widget.color.withValues(alpha: alpha),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }
 
