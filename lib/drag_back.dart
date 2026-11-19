@@ -7,6 +7,7 @@ import 'package:flutter/physics.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
 import 'package:prism_ui/motion.dart';
+import 'package:prism_ui/page_swipe.dart';
 
 /// iOS 27's interactive pop, as measured on the simulator: the page trails
 /// the finger on a stiff spring, pops when the distance dragged plus the
@@ -393,10 +394,18 @@ class _DragBackDetectorState extends State<_DragBackDetector> {
   Offset _toLogical(Offset value) => Offset(value.dx * _towardEnd, value.dy);
 
   void _handlePointerDown(PointerDownEvent event) {
+    if (widget.route.isCurrent && widget.route.canPop) {
+      PageSwipeScope.blockPointer(context, event.pointer, onBack: _maybePop);
+    }
     if (widget.route._canDragBack) {
       _directed.towardEnd = _towardEnd;
       _recognizer.addPointer(event);
     }
+  }
+
+  void _maybePop() {
+    final route = widget.route;
+    if (mounted && route.isCurrent) unawaited(route.navigator!.maybePop());
   }
 
   void _handleDragStart(DragStartDetails details) {

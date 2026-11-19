@@ -59,16 +59,20 @@ class _RouteMotion {
 bool isRouteMoving(BuildContext context) => _RouteMotion(context).isMoving;
 
 /// Holds list refreshes while the page's route is pushed, popped, covered,
-/// uncovered or dragged back, and replays the latest one once it settles.
+/// uncovered or dragged back, or while its tickers are muted (a kept-alive
+/// page off screen), and replays the latest one once it settles.
 mixin RouteMotionHoldMixin<T extends StatefulWidget> on State<T> {
   ModalRoute<Object?>? _route;
   _RouteMotion? _motion;
   VoidCallback? _heldUpdate;
   var _settleRun = 0;
   var _settling = false;
+  bool _tickersEnabled = true;
+
+  bool get _holds => !_tickersEnabled || (_motion?.isMoving ?? false);
 
   void updateWhenRouteSettled(VoidCallback update) {
-    if (_settling || (_motion?.isMoving ?? false)) {
+    if (_settling || _holds) {
       _heldUpdate = update;
       return;
     }
@@ -89,6 +93,11 @@ mixin RouteMotionHoldMixin<T extends StatefulWidget> on State<T> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    final tickersEnabled = TickerMode.valuesOf(context).enabled;
+    if (tickersEnabled && !_tickersEnabled && _heldUpdate != null) {
+      SchedulerBinding.instance.addPostFrameCallback((_) => _releaseHeld());
+    }
+    _tickersEnabled = tickersEnabled;
     final route = ModalRoute.of(context);
     if (_motion != null && identical(route, _route)) {
       return;
@@ -113,7 +122,7 @@ mixin RouteMotionHoldMixin<T extends StatefulWidget> on State<T> {
   void _handleStatus(AnimationStatus _) => _releaseHeld();
 
   void _releaseHeld() {
-    if (!mounted || (_motion?.isMoving ?? false)) {
+    if (!mounted || _holds) {
       return;
     }
     final scheduler = SchedulerBinding.instance;
