@@ -11,6 +11,12 @@ const _glyphSegments = [
   GlyphSegment(value: 3, glyph: Glyphs.copy, label: 'Copies'),
 ];
 
+const _illustrations = [
+  ('search', Illustration.search),
+  ('history', Illustration.history),
+  ('error', Illustration.error),
+];
+
 class SegmentsPage extends StatefulWidget {
   const SegmentsPage({super.key});
 
@@ -56,7 +62,6 @@ class _SegmentsPageState extends State<SegmentsPage>
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
     return PageBody(
       children: [
         Section(
@@ -70,38 +75,21 @@ class _SegmentsPageState extends State<SegmentsPage>
         Section(
           title: 'GlyphSegment and RollingTitle',
           caption:
-              'GlyphSegment is data; the strip below springs one position '
-              'value with springToSegment and RollingTitle rolls its labels '
-              'with it.',
+              'GlyphSegmentedControl springs one position value with '
+              'springToSegment and RollingTitle rolls its labels with it.',
           child: Panel(
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               spacing: 16,
               children: [
-                Row(
-                  spacing: 8,
-                  children: [
-                    for (final segment in _glyphSegments)
-                      Expanded(
-                        child: FilledButton(
-                          onPressed: () => _select(segment.value),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            spacing: 8,
-                            children: [
-                              GlyphIcon(
-                                segment.glyph,
-                                color: segment.value == _selected
-                                    ? scheme.onPrimary
-                                    : scheme.onPrimary.withValues(alpha: 0.6),
-                              ),
-                              Text(segment.label),
-                            ],
-                          ),
-                        ),
-                      ),
-                  ],
+                Center(
+                  child: GlyphSegmentedControl<int>(
+                    segments: _glyphSegments,
+                    value: _selected,
+                    position: _position,
+                    onChanged: _select,
+                  ),
                 ),
                 SizedBox(
                   height: 40,
@@ -119,23 +107,25 @@ class _SegmentsPageState extends State<SegmentsPage>
         ),
         Section(
           title: 'NullStatus',
-          caption: 'Tap the illustration, or press replay, to run its entrance.',
+          caption: 'Every illustration; tap one, or press replay, to run its '
+              'entrance.',
           child: Panel(
             child: Column(
               children: [
-                SizedBox(
-                  height: 340,
-                  child: NullStatus(
-                    key: ValueKey(_generation),
-                    label: 'Nothing here yet',
-                    description: 'Matching results will show up in this list.',
-                    illustration: Illustration.search,
-                    action: TonalButton(
-                      label: 'Replay',
-                      onPressed: () => setState(() => _generation++),
+                TonalButton(
+                  label: 'Replay',
+                  onPressed: () => setState(() => _generation++),
+                ),
+                for (final (name, illustration) in _illustrations)
+                  SizedBox(
+                    height: 340,
+                    child: NullStatus(
+                      key: ValueKey((name, _generation)),
+                      label: name,
+                      description: 'Matching results will show up here.',
+                      illustration: illustration,
                     ),
                   ),
-                ),
               ],
             ),
           ),

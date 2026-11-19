@@ -2,9 +2,12 @@ import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/physics.dart';
 import 'package:flutter/widgets.dart';
+import 'package:prism_ui/button.dart';
 import 'package:prism_ui/icons/icons.dart';
 import 'package:prism_ui/card_surface.dart';
 import 'package:prism_ui/context.dart';
+import 'package:prism_ui/liquid_glass.dart';
+import 'package:prism_ui/navigation_dock.dart';
 import 'package:prism_ui/press_surface.dart';
 import 'package:prism_ui/shape.dart';
 import 'package:prism_ui/surface.dart';
@@ -136,6 +139,58 @@ void springToSegment(
       position.value,
       index.toDouble(),
       position.velocity,
+    ),
+  );
+}
+
+/// Segments shown as glyphs under one indicator that slides between them;
+/// [position] is the segment index it stands on, fractional while it moves,
+/// so a title can travel with it.
+class GlyphSegmentedControl<T> extends StatelessWidget {
+  const GlyphSegmentedControl({
+    super.key,
+    required this.segments,
+    required this.value,
+    required this.position,
+    required this.onChanged,
+  });
+
+  static const double _inset = 4;
+  static const double _segment = 56;
+  static const _size = TonalButtonSize.section;
+
+  final List<GlyphSegment<T>> segments;
+  final T value;
+  final AnimationController position;
+  final ValueChanged<T> onChanged;
+
+  @override
+  Widget build(BuildContext context) => LiquidGlassScope(
+    enabled: TonalButtonTheme.glassOf(context),
+    quality: LiquidGlassScope.qualityOf(context),
+    child: SizedBox(
+      width: segments.length * _segment + _inset * 2,
+      height: _size.button + _inset * 2,
+      child: GestureDetector(
+        onHorizontalDragUpdate: (_) {},
+        child: FloatingNavigationBar(
+          compact: true,
+          position: position,
+          destinations: [
+            for (final segment in segments)
+              NavigationDockDestination(
+                id: segment.value,
+                glyph: segment.glyph,
+                label: segment.label,
+              ),
+          ],
+          selectedIndex: segments.indexWhere(
+            (segment) => segment.value == value,
+          ),
+          labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
+          onSelected: (index) => onChanged(segments[index].value),
+        ),
+      ),
     ),
   );
 }

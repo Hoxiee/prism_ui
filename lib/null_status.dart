@@ -20,6 +20,8 @@ import 'package:prism_ui/typography.dart';
 /// at random.
 abstract interface class Illustration {
   static const Illustration search = _SearchIllustration();
+  static const Illustration history = _HistoryIllustration();
+  static const Illustration error = _ErrorIllustration();
 
   Glyph get glyph;
 
@@ -35,6 +37,44 @@ class _SearchIllustration implements Illustration {
 
   @override
   bool get isError => false;
+}
+
+class _HistoryIllustration implements Illustration {
+  const _HistoryIllustration();
+
+  static const _clock = Glyph([
+    GlyphCircle(12, 12, 8.8),
+    GlyphPolyline([
+      GlyphVertex(12, 7.2),
+      GlyphVertex(12, 12, 0.6),
+      GlyphVertex(15.2, 14),
+    ], role: GlyphRole.detail),
+  ]);
+
+  @override
+  Glyph get glyph => _clock;
+
+  @override
+  bool get isError => false;
+}
+
+class _ErrorIllustration implements Illustration {
+  const _ErrorIllustration();
+
+  static const _alert = Glyph([
+    GlyphCircle(12, 12, 8.8),
+    GlyphPolyline([
+      GlyphVertex(12, 7.3),
+      GlyphVertex(12, 12.2),
+    ], role: GlyphRole.detail),
+    GlyphCircle(12, 16.5, 1.4, role: GlyphRole.detail, solid: true),
+  ]);
+
+  @override
+  Glyph get glyph => _alert;
+
+  @override
+  bool get isError => true;
 }
 
 /// Holds the transition of the route it arrives in while its first load runs,
