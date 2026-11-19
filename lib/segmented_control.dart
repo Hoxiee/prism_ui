@@ -1,4 +1,8 @@
+import 'dart:ui' show ImageFilter;
+
+import 'package:flutter/physics.dart';
 import 'package:flutter/widgets.dart';
+import 'package:prism_ui/icons/icons.dart';
 import 'package:prism_ui/card_surface.dart';
 import 'package:prism_ui/context.dart';
 import 'package:prism_ui/press_surface.dart';
@@ -91,6 +95,94 @@ class SegmentedControl<T> extends StatelessWidget {
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+class GlyphSegment<T> {
+  const GlyphSegment({
+    required this.value,
+    required this.glyph,
+    required this.label,
+  });
+
+  final T value;
+  final Glyph glyph;
+  final String label;
+}
+
+/// Bouncy enough for the indicator to land with a little give, which the
+/// pages beside it, travelling touching, cannot afford.
+final glyphSegmentSpring = SpringDescription.withDurationAndBounce(
+  duration: const Duration(milliseconds: 420),
+  bounce: 0.18,
+);
+
+/// Moves [position] to [index] along [glyphSegmentSpring], keeping the speed
+/// it had when a new index interrupts it.
+void springToSegment(
+  AnimationController position,
+  int index, {
+  bool instant = false,
+}) {
+  if (instant) {
+    position.value = index.toDouble();
+    return;
+  }
+  position.animateWith(
+    SpringSimulation(
+      glyphSegmentSpring,
+      position.value,
+      index.toDouble(),
+      position.velocity,
+    ),
+  );
+}
+
+/// Labels stacked like an odometer: each rolls through as [position] passes
+/// its index, the next arriving from below while moving forward.
+class RollingTitle extends StatelessWidget {
+  const RollingTitle({super.key, required this.labels, required this.position});
+
+  final List<String> labels;
+  final Animation<double> position;
+
+  @override
+  Widget build(BuildContext context) => AnimatedBuilder(
+    animation: position,
+    builder: (context, _) {
+      final at = position.value;
+      final nearest = at.round().clamp(0, labels.length - 1);
+      return Stack(
+        alignment: AlignmentDirectional.centerStart,
+        children: [
+          for (var index = 0; index < labels.length; index++)
+            if ((at - index).abs() < 1 || index == nearest)
+              _rolling(labels[index], at - index, index == nearest),
+        ],
+      );
+    },
+  );
+
+  Widget _rolling(String label, double distance, bool current) {
+    final away = distance.abs().clamp(0.0, 1.0);
+    return FractionalTranslation(
+      translation: Offset(0, -distance * 0.9),
+      child: Transform.scale(
+        scale: 1 - away * 0.12,
+        alignment: AlignmentDirectional.centerStart,
+        child: Opacity(
+          opacity: (1 - away * 1.4).clamp(0.0, 1.0),
+          child: ImageFiltered(
+            enabled: away > 0,
+            imageFilter: ImageFilter.blur(sigmaY: away * 8),
+            child: ExcludeSemantics(
+              excluding: !current,
+              child: Text(label, maxLines: 1, softWrap: false),
+            ),
+          ),
+        ),
       ),
     );
   }
