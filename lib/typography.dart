@@ -69,3 +69,9 @@ enum AppTextStyle {
     letterSpacing: 0,
   );
 }
+
+extension AppTypographyThemeExt on ThemeData {
+  /// The footnote step as runnable text, for a caller holding only a [ThemeData].
+  TextStyle get footnoteText =>
+      AppTextStyle.footnote._apply(bodyTextStyle, emphasized: false);
+}

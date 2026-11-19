@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart';
 import 'package:prism_ui/context.dart';
 import 'package:prism_ui/item_position.dart';
 import 'package:prism_ui/metrics.dart';
+import 'package:prism_ui/models.dart';
 
 import 'inherited.dart';
 import 'list.dart';
@@ -135,12 +136,14 @@ class EntryTransition extends StatelessWidget {
 
   final Animation<double>? animation;
   final bool leaving;
+  final AlignmentGeometry alignment;
   final Widget child;
 
   const EntryTransition({
     super.key,
     required this.animation,
     this.leaving = false,
+    this.alignment = Alignment.topCenter,
     required this.child,
   });
 
@@ -151,15 +154,83 @@ class EntryTransition extends StatelessWidget {
       ignoring: leaving,
       child: SizeTransition(
         sizeFactor: animation.drive(_size),
-        alignment: Alignment.topCenter,
+        alignment: alignment,
         child: FadeTransition(opacity: animation.drive(_fade), child: child),
       ),
     );
   }
 }
 
+/// Unfolds [child] in place while [visible] and folds it away otherwise, with
+/// the motion of [AnimatedEntries]; it leaves showing the last visible child.
+class AnimatedReveal extends StatefulWidget {
+  final bool visible;
+
+  /// Where a child narrower than the space it unfolds into sits.
+  final AlignmentGeometry alignment;
+  final Widget child;
+
+  const AnimatedReveal({
+    super.key,
+    required this.visible,
+    this.alignment = Alignment.topCenter,
+    required this.child,
+  });
+
+  @override
+  State<AnimatedReveal> createState() => _AnimatedRevealState();
+}
+
+class _AnimatedRevealState extends State<AnimatedReveal>
+    with SingleTickerProviderStateMixin {
+  late final _controller = AnimationController(
+    vsync: this,
+    value: widget.visible ? 1 : 0,
+  )..addStatusListener(_handleStatus);
+  late var _child = widget.child;
+
+  void _handleStatus(AnimationStatus status) {
+    if (status.isDismissed && mounted) {
+      setState(() {});
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant AnimatedReveal oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.visible) {
+      _child = widget.child;
+    }
+    if (widget.visible == oldWidget.visible) {
+      return;
+    }
+    _controller.duration = context.motionDuration(commonDuration);
+    widget.visible ? _controller.forward() : _controller.reverse();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!widget.visible && _controller.isDismissed) {
+      return const SizedBox.shrink();
+    }
+    return EntryTransition(
+      animation: _controller,
+      leaving: !widget.visible,
+      alignment: widget.alignment,
+      child: _child,
+    );
+  }
+}
+
 /// With [grouped], a child collapsing out keeps its place in the run of
-/// rounded rows while the others close up around it.
+/// rounded rows while the others close up around it. A child without a key is
+/// told apart by its type, so two of one type need keys of their own.
 class AnimatedEntries extends StatefulWidget {
   final List<Widget> children;
   final bool grouped;
@@ -176,7 +247,7 @@ class AnimatedEntries extends StatefulWidget {
 
 class _AnimatedEntriesState extends State<AnimatedEntries>
     with TickerProviderStateMixin {
-  late final _transitions = EntryTransitions<Key?>(
+  late final _transitions = EntryTransitions<Key>(
     vsync: this,
     onLeft: _handleLeft,
   );
@@ -188,7 +259,7 @@ class _AnimatedEntriesState extends State<AnimatedEntries>
     _entries = _transitions.sync(
       _entries,
       widget.children,
-      (child) => child.key,
+      _keyOf,
       context.motionDuration(commonDuration),
     );
   }
@@ -199,14 +270,16 @@ class _AnimatedEntriesState extends State<AnimatedEntries>
     super.dispose();
   }
 
-  void _handleLeft(Key? key) {
-    if (!mounted || widget.children.any((child) => child.key == key)) {
+  static Key _keyOf(Widget child) => child.key ?? ValueKey(child.runtimeType);
+
+  void _handleLeft(Key key) {
+    if (!mounted || widget.children.any((child) => _keyOf(child) == key)) {
       return;
     }
     setState(() {
       _entries = [
         for (final entry in _entries)
-          if (entry.key != key) entry,
+          if (_keyOf(entry) != key) entry,
       ];
     });
   }
@@ -214,22 +287,23 @@ class _AnimatedEntriesState extends State<AnimatedEntries>
   @override
   Widget build(BuildContext context) {
     if (widget.grouped) {
-      _transitions.place(_entries.map((entry) => entry.key));
+      _transitions.place(_entries.map(_keyOf));
     }
     return Column(
       children: [
         for (final entry in _entries)
-          EntryTransition(
-            key: entry.key,
-            animation: _transitions.animationOf(entry.key),
-            leaving: _transitions.isLeaving(entry.key),
-            child: widget.grouped
-                ? ItemPositionProvider(
-                    position: _transitions.positionOf(entry.key),
-                    child: entry,
-                  )
-                : entry,
-          ),
+          if (_keyOf(entry) case final key)
+            EntryTransition(
+              key: key,
+              animation: _transitions.animationOf(key),
+              leaving: _transitions.isLeaving(key),
+              child: widget.grouped
+                  ? ItemPositionProvider(
+                      position: _transitions.positionOf(key),
+                      child: entry,
+                    )
+                  : entry,
+            ),
       ],
     );
   }
@@ -238,14 +312,37 @@ class _AnimatedEntriesState extends State<AnimatedEntries>
 Widget generateAnimatedSection({
   String? title,
   required List<Widget> items,
+  List<IconButtonData> actions = const [],
   String? footer,
 }) {
   return Column(
     children: [
-      if (items.isNotEmpty)
-        title != null ? ListHeader(title: title) : const ListSectionGap(),
+      AnimatedReveal(
+        visible: items.isNotEmpty,
+        child: title != null
+            ? ListHeader(title: title, actions: actions)
+            : const ListSectionGap(),
+      ),
       AnimatedEntries(grouped: true, children: items),
-      if (items.isNotEmpty && footer != null) ListFooter(text: footer),
+      AnimatedReveal(
+        visible: items.isNotEmpty && footer != null,
+        child: _AnimatedFooter(text: footer ?? ''),
+      ),
     ],
+  );
+}
+
+/// Eases a footer whose text gains or loses a line along with its rows.
+class _AnimatedFooter extends StatelessWidget {
+  final String text;
+
+  const _AnimatedFooter({required this.text});
+
+  @override
+  Widget build(BuildContext context) => AnimatedSize(
+    duration: context.motionDuration(commonDuration),
+    curve: Curves.easeInOutCubic,
+    alignment: Alignment.topCenter,
+    child: ListFooter(text: text),
   );
 }

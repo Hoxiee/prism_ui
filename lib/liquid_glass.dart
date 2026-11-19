@@ -471,14 +471,13 @@ class LiquidGlassStyle {
 
   double get _hairlineSide => hairlineSide ?? hairline;
 
-  /// The standard tier's: no colors parted, and a haze for the whole frost.
+  // Standard avoids the extra backdrop reads used by adaptive contrast.
   LiquidGlassStyle get _standard {
-    if (haze == 0 && dispersion == 0) {
+    if (haze == 0 && dispersion == 0 && contrast == 0) {
       return this;
     }
     return LiquidGlassStyle(
       tint: tint,
-      contrast: contrast,
       blur: haze > 0 ? hazeBlur : blur,
       refraction: refraction,
       bevel: bevel,
@@ -1442,7 +1441,10 @@ class _LiquidGlassLayer extends Layer {
     if (outline case final outline?) {
       builder.pushClipPath(outline);
     } else {
-      builder.pushClipRSuperellipse(corners.toRSuperellipse(rect));
+      builder.pushClipRSuperellipse(
+        corners.toRSuperellipse(rect),
+        clipBehavior: Clip.antiAlias,
+      );
     }
     builder.addPicture(Offset.zero, _frost!);
     builder.pop();
