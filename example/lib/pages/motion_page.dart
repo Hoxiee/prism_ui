@@ -91,6 +91,7 @@ class _MotionPageState extends State<MotionPage> with TickerProviderStateMixin {
         Controls(
           children: [
             FilledButton(
+              key: const ValueKey('motion-spring'),
               onPressed: _toggleSpring,
               child: const Text('Replay NavSpring'),
             ),
@@ -119,6 +120,7 @@ class _MotionPageState extends State<MotionPage> with TickerProviderStateMixin {
         Controls(
           children: [
             FilledButton(
+              key: const ValueKey('motion-curve'),
               onPressed: () => _curve.forward(from: 0),
               child: const Text('Replay slideTabCurve'),
             ),
@@ -165,7 +167,11 @@ class _MotionPageState extends State<MotionPage> with TickerProviderStateMixin {
         Controls(
           children: [
             for (final (i, name) in _tabs.indexed)
-              TextButton(onPressed: () => _selectTab(i), child: Text(name)),
+              TextButton(
+                key: ValueKey('motion-tab-$i'),
+                onPressed: () => _selectTab(i),
+                child: Text(name),
+              ),
           ],
         ),
         Panel(
@@ -228,6 +234,7 @@ class _MotionPageState extends State<MotionPage> with TickerProviderStateMixin {
         Controls(
           children: [
             FilledButton(
+              key: const ValueKey('motion-slot-add'),
               onPressed: () => _slots.sync([
                 ..._slots.slots.where((s) => !s.leaving).map((s) => s.key),
                 _nextSlot++,
@@ -235,11 +242,14 @@ class _MotionPageState extends State<MotionPage> with TickerProviderStateMixin {
               child: const Text('Add slot'),
             ),
             FilledButton(
+              key: const ValueKey('motion-slot-remove'),
               onPressed: () {
                 final live = [
                   ..._slots.slots.where((s) => !s.leaving).map((s) => s.key),
                 ];
-                if (live.isNotEmpty) _slots.sync(live..removeAt(live.length ~/ 2));
+                if (live.isNotEmpty) {
+                  _slots.sync(live..removeAt(live.length ~/ 2));
+                }
               },
               child: const Text('Remove middle'),
             ),
@@ -291,7 +301,9 @@ class _MotionPageState extends State<MotionPage> with TickerProviderStateMixin {
         Controls(
           children: [
             FilledButton(
-              onPressed: () => setState(() => _entries = [..._entries, _nextEntry++]),
+              key: const ValueKey('motion-entry-add'),
+              onPressed: () =>
+                  setState(() => _entries = [..._entries, _nextEntry++]),
               child: const Text('Add entry'),
             ),
             FilledButton(
@@ -303,6 +315,7 @@ class _MotionPageState extends State<MotionPage> with TickerProviderStateMixin {
               child: const Text('Remove middle'),
             ),
             FilledButton(
+              key: const ValueKey('motion-reveal'),
               onPressed: () => setState(() => _revealed = !_revealed),
               child: Text(_revealed ? 'Hide reveal' : 'Show reveal'),
             ),
@@ -333,10 +346,7 @@ class _MotionPageState extends State<MotionPage> with TickerProviderStateMixin {
     return PageBody(
       children: [
         Section(title: 'NavSpring (spring.dart)', child: _springDemo(color)),
-        Section(
-          title: 'SpringCurve (motion.dart)',
-          child: _curveDemo(color),
-        ),
+        Section(title: 'SpringCurve (motion.dart)', child: _curveDemo(color)),
         Section(
           title: 'TabMotionPlan and TabMotionTransition',
           caption: 'Switch quickly: an interrupted slide restarts where drawn.',

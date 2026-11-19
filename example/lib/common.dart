@@ -28,7 +28,12 @@ class PageBody extends StatelessWidget {
 }
 
 class Section extends StatelessWidget {
-  const Section({super.key, required this.title, this.caption, required this.child});
+  const Section({
+    super.key,
+    required this.title,
+    this.caption,
+    required this.child,
+  });
 
   final String title;
   final String? caption;
@@ -79,6 +84,26 @@ class Panel extends StatelessWidget {
       shape: AppShape.all(20),
       clipBehavior: Clip.antiAlias,
       child: Padding(padding: padding, child: child),
+    );
+  }
+}
+
+/// A page-level surface for demos of raised parts, as an app lays them out;
+/// on the gallery's own background a light card would not stand out.
+class Backdrop extends StatelessWidget {
+  const Backdrop({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return SurfaceScope(
+      level: SurfaceLevel.page,
+      child: Surface(
+        color: SurfaceLevel.page.colorOf(context.colorScheme),
+        shape: AppShape.all(20),
+        child: Padding(padding: const EdgeInsets.all(16), child: child),
+      ),
     );
   }
 }

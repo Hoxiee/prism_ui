@@ -32,6 +32,7 @@ class _CardsPageState extends State<CardsPage> {
         for (var i = 0; i < 3; i++)
           Expanded(
             child: Card(
+              key: ValueKey('card-$i'),
               isSelected: i == _cardSelected,
               holdsSelection: _holds,
               fillsSelection: _fills,
@@ -43,10 +44,7 @@ class _CardsPageState extends State<CardsPage> {
                   spacing: 4,
                   children: [
                     GlyphIcon(_rows[i].$3),
-                    Text(
-                      _rows[i].$1,
-                      style: AppTextStyle.headline.of(context),
-                    ),
+                    Text(_rows[i].$1, style: AppTextStyle.headline.of(context)),
                     Text(i == _cardSelected ? 'Selected' : 'Press to select'),
                   ],
                 ),
@@ -64,6 +62,7 @@ class _CardsPageState extends State<CardsPage> {
         const ListHeader(title: 'Sections', caption: 'Selected rows'),
         for (final (i, row) in _rows.indexed)
           DecorationListItem(
+            key: ValueKey('row-$i'),
             title: Text(row.$1),
             subtitle: Text(row.$2),
             leading: GlyphIcon(row.$3),
@@ -178,11 +177,13 @@ class _CardsPageState extends State<CardsPage> {
         Controls(
           children: [
             LabeledSwitch(
+              key: const ValueKey('holds'),
               label: 'holdsSelection',
               value: _holds,
               onChanged: (value) => setState(() => _holds = value),
             ),
             LabeledSwitch(
+              key: const ValueKey('fills'),
               label: 'fillsSelection',
               value: _fills,
               onChanged: (value) => setState(() => _fills = value),
@@ -194,10 +195,16 @@ class _CardsPageState extends State<CardsPage> {
           caption:
               'A selected card keeps its fill; holdsSelection takes the '
               'secondary container instead.',
-          child: _cards(),
+          child: Backdrop(child: _cards()),
         ),
-        Section(title: 'List items with selection', child: _list()),
-        Section(title: 'ListRow', child: _listRows()),
+        Section(
+          title: 'List items with selection',
+          child: Backdrop(child: _list()),
+        ),
+        Section(
+          title: 'ListRow',
+          child: Backdrop(child: _listRows()),
+        ),
         Section(
           title: 'CardFillScope',
           caption:

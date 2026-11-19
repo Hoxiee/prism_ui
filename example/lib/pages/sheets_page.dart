@@ -69,6 +69,7 @@ class SheetsPage extends StatelessWidget {
           child: Controls(
             children: [
               FilledButton(
+                key: const ValueKey('sheet-showSheet'),
                 onPressed: () => showSheet<void>(
                   context: context,
                   builder: (context) => _body(context, 'showSheet'),
@@ -76,6 +77,7 @@ class SheetsPage extends StatelessWidget {
                 child: const Text('showSheet'),
               ),
               FilledButton(
+                key: const ValueKey('sheet-showFormSheet'),
                 onPressed: () => showFormSheet<void>(
                   context: context,
                   builder: (context) => _body(context, 'showFormSheet'),
@@ -83,6 +85,7 @@ class SheetsPage extends StatelessWidget {
                 child: const Text('showFormSheet'),
               ),
               FilledButton(
+                key: const ValueKey('sheet-showSnapSheet'),
                 onPressed: () => showSnapSheet<void>(
                   context,
                   builder: (context, controller) => ListView(
@@ -114,6 +117,7 @@ class SheetsPage extends StatelessWidget {
           child: Controls(
             children: [
               FilledButton(
+                key: const ValueKey('sheet-showExtend'),
                 onPressed: () => showExtend<void>(
                   context,
                   builder: (context) => _body(context, 'showExtend'),
@@ -121,6 +125,7 @@ class SheetsPage extends StatelessWidget {
                 child: const Text('showExtend'),
               ),
               FilledButton(
+                key: const ValueKey('sheet-showExtend-forceFull'),
                 onPressed: () => showExtend<void>(
                   context,
                   props: const ExtendProps(forceFull: true),
@@ -139,12 +144,12 @@ class SheetsPage extends StatelessWidget {
           child: Controls(
             children: [
               FilledButton(
+                key: const ValueKey('sheet-paged'),
                 onPressed: () => showSheet<void>(
                   context: context,
                   props: nestedPagedSheetProps,
-                  builder: (context) => NestedPagedSheet(
-                    builder: (context) => _page(context, 1),
-                  ),
+                  builder: (context) =>
+                      NestedPagedSheet(builder: (context) => _page(context, 1)),
                 ),
                 child: const Text('Open paged sheet'),
               ),
@@ -157,6 +162,7 @@ class SheetsPage extends StatelessWidget {
           child: Controls(
             children: [
               FilledButton(
+                key: const ValueKey('sheet-stage'),
                 onPressed: () => showSheet<void>(
                   context: context,
                   props: stageSheetProps,

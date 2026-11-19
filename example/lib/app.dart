@@ -99,10 +99,14 @@ class GalleryApp extends StatelessWidget {
           final size = MediaQuery.sizeOf(context);
           return SettingsScope(
             settings: settings,
-            child: ViewScope(
-              size: size,
-              isMobile: size.width <= _compactWidth,
-              child: child!,
+            child: MediaQuery(
+              data: MediaQuery.of(context)
+                  .copyWith(textScaler: TextScaler.linear(settings.textScale)),
+              child: ViewScope(
+                size: size,
+                isMobile: size.width <= _compactWidth,
+                child: child!,
+              ),
             ),
           );
         },
@@ -193,18 +197,56 @@ class _Header extends StatelessWidget {
               style: AppTextStyle.pageTitle.of(context),
             ),
           ),
-          for (final seed in seedChoices)
-            _Swatch(
-              color: seed,
-              selected: seed == settings.seed,
-              onTap: () => settings.seed = seed,
+          Flexible(
+            flex: 3,
+            child: Wrap(
+              alignment: WrapAlignment.end,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 12,
+              runSpacing: 8,
+              children: [
+                for (final seed in seedChoices)
+                  _Swatch(
+                    color: seed,
+                    selected: seed == settings.seed,
+                    onTap: () => settings.seed = seed,
+                  ),
+                SizedBox(
+                  width: 260,
+                  child: SegmentedControl<ColorContrast>(
+                    key: const ValueKey('contrast'),
+                    segments: [
+                      for (final level in ColorContrast.values)
+                        (level, level.name),
+                    ],
+                    value: settings.contrast,
+                    onChanged: (value) => settings.contrast = value,
+                  ),
+                ),
+                SizedBox(
+                  width: 120,
+                  child: SegmentedControl<double>(
+                    key: const ValueKey('text-scale'),
+                    segments: const [(1.0, '1.0x'), (1.3, '1.3x')],
+                    value: settings.textScale,
+                    onChanged: (value) => settings.textScale = value,
+                  ),
+                ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  spacing: 8,
+                  children: [
+                    Text(settings.dark ? 'Dark' : 'Light'),
+                    Switch(
+                      key: const ValueKey('dark'),
+                      value: settings.dark,
+                      onChanged: (value) => settings.dark = value,
+                      semanticLabel: 'Dark theme',
+                    ),
+                  ],
+                ),
+              ],
             ),
-          const SizedBox(width: 4),
-          Text(settings.dark ? 'Dark' : 'Light'),
-          Switch(
-            value: settings.dark,
-            onChanged: (value) => settings.dark = value,
-            semanticLabel: 'Dark theme',
           ),
         ],
       ),

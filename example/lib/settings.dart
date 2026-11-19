@@ -16,23 +16,27 @@ class GallerySettings extends ChangeNotifier {
     this._seed = const Color(0xFF6750A4),
     this._contrast = ColorContrast.standard,
     this._page = 0,
+    this._textScale = 1.0,
   });
 
   bool _dark;
   Color _seed;
   ColorContrast _contrast;
   int _page;
+  double _textScale;
   bool sidebarExpanded = true;
 
   bool get dark => _dark;
   Color get seed => _seed;
   ColorContrast get contrast => _contrast;
   int get page => _page;
+  double get textScale => _textScale;
 
   set dark(bool value) => _update(() => _dark = value);
   set seed(Color value) => _update(() => _seed = value);
   set contrast(ColorContrast value) => _update(() => _contrast = value);
   set page(int value) => _update(() => _page = value);
+  set textScale(double value) => _update(() => _textScale = value);
 
   void toggleSidebar() => _update(() => sidebarExpanded = !sidebarExpanded);
 
