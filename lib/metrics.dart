@@ -15,6 +15,13 @@ double _adaptiveScaleOf(BuildContext context) =>
 EdgeInsets baseInfoEdgeInsetsOf(BuildContext context) =>
     EdgeInsets.all(16.mAp(context));
 
+/// Spaces a page's self-drawn sections, each an `InfoHeader` over its
+/// content; a grouped list spaces its sections by [listSectionGap] instead.
+const infoSectionSpacing = 16.0;
+
+/// Where a self-drawn section's content starts below its `InfoHeader`.
+const infoSectionContentGap = 8.0;
+
 /// iOS 27 sets these by the width of the view a list spans, not the list's.
 @immutable
 class ListInsets {
@@ -62,6 +69,22 @@ EdgeInsets listHeaderPaddingOf(BuildContext context) {
 const listRowMinHeight = 53.0;
 const listRowVerticalPadding = 15.5;
 const listTwoLineRowVerticalPadding = 10.0;
+
+/// How tall a `ListRow` stands around a title and an optional subtitle this
+/// tall, by default padded as one line or two.
+double listRowExtent({
+  required double titleHeight,
+  double? subtitleHeight,
+  double minHeight = listRowMinHeight,
+  double? verticalPadding,
+}) {
+  final padding =
+      verticalPadding ??
+      (subtitleHeight == null
+          ? listRowVerticalPadding
+          : listTwoLineRowVerticalPadding);
+  return max(minHeight, titleHeight + (subtitleHeight ?? 0) + 2 * padding);
+}
 
 /// A row's leading glyph slot: its center 12 past the inset, the title 40.
 const listLeadingSlotWidth = 24.0;

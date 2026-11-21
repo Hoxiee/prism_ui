@@ -263,9 +263,11 @@ class _RenderListRow extends RenderBox
 
   Rect _content = Rect.zero;
 
-  double _height(double titleHeight, double? subtitleHeight) => math.max(
-    _minHeight,
-    titleHeight + (subtitleHeight ?? 0) + 2 * _minVerticalPadding,
+  double _height(double titleHeight, double? subtitleHeight) => listRowExtent(
+    titleHeight: titleHeight,
+    subtitleHeight: subtitleHeight,
+    minHeight: _minHeight,
+    verticalPadding: _minVerticalPadding,
   );
 
   double _leadingSlot(double width) => math.max(listLeadingSlotWidth, width);
