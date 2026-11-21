@@ -13,6 +13,7 @@ export 'chip.dart';
 export 'collapsible_section.dart';
 export 'color.dart';
 export 'common_button.dart';
+export 'connected_button.dart';
 export 'context.dart';
 export 'context_menu.dart';
 export 'deferred_push.dart';
