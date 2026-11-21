@@ -438,13 +438,19 @@ const double _headerOverhang = 16;
 const double _iconButtonTapPadding = 4;
 
 /// Where a filled button sits from the app bar edge, leading included: the
-/// layout margin iOS gives a compact and a regular width.
-double appBarActionInset(bool compact) => compact ? 16 : 20;
+/// bar's layout margin. On a phone iOS 27 sets it to the list's inner inset at
+/// every width; a desktop sheet keeps the compact margin.
+double appBarActionInset(BuildContext context, bool compact) {
+  if (!compact) return ListInsets.wide.leading;
+  return ViewScope.isMobileOf(context)
+      ? ListInsets.of(context).leading
+      : ListInsets.compact.leading;
+}
 
 double _iconActionInset(bool isMobileView) => isMobileView ? 4 : 8;
 
-double appBarLeadingWidth(bool compact) =>
-    TonalButtonSize.bar.button + appBarActionInset(compact) * 2;
+double appBarLeadingWidth(BuildContext context, bool compact) =>
+    TonalButtonSize.bar.button + appBarActionInset(context, compact) * 2;
 
 /// A phone view or a sheet: an iOS compact width.
 bool isCompactBar(BuildContext context, bool isMobileView) {
@@ -458,7 +464,10 @@ enum AppBarActionEdge {
 
   double spaceOf(BuildContext context, bool isMobileView) => switch (this) {
     icon => _iconActionInset(isMobileView) - _tapPaddingOf(context),
-    container => appBarActionInset(isCompactBar(context, isMobileView)),
+    container => appBarActionInset(
+      context,
+      isCompactBar(context, isMobileView),
+    ),
   };
 
   double get gap => switch (this) {
@@ -639,7 +648,7 @@ class AppBar extends StatelessWidget {
           ? null
           : ConstrainedBox(
               constraints: BoxConstraints.tightFor(
-                width: appBarLeadingWidth(compact),
+                width: appBarLeadingWidth(context, compact),
               ),
               child: leading,
             ),
