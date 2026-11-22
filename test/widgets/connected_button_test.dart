@@ -65,4 +65,30 @@ void main() {
     await tester.tap(find.text('Three'));
     expect(changes, [2]);
   });
+
+  testWidgets('a screen reader activates a connected button as a press '
+      'would', (tester) async {
+    final semantics = tester.ensureSemantics();
+    final changes = <int>[];
+    await tester.pumpWidget(
+      HostApp(
+        home: HostScaffold(
+          body: SizedBox(
+            width: 303,
+            child: ConnectedButtonBar<int>(
+              segments: const [(0, 'One'), (1, 'Two'), (2, 'Three')],
+              value: 0,
+              onChanged: changes.add,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    tester.semantics.tap(find.semantics.byLabel('Three'));
+
+    expect(changes, [2]);
+    semantics.dispose();
+  });
 }
