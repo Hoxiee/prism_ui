@@ -74,7 +74,7 @@ class SegmentedControl<T> extends StatelessWidget {
       onPressed: option == value ? () {} : () => onChanged(option),
       child: Center(
         child: AnimatedDefaultTextStyle(
-          duration: _slideDuration,
+          duration: context.motionDuration(_slideDuration),
           style: styleOf(emphasized: option == value).copyWith(
             color: option == value
                 ? colorScheme.onPrimary
@@ -113,7 +113,7 @@ class SegmentedControl<T> extends StatelessWidget {
                   1,
                 ),
               ),
-              duration: _slideDuration,
+              duration: context.motionDuration(_slideDuration),
               curve: _slideCurve,
               builder: (context, span, child) => Align(
                 alignment: AlignmentDirectional(

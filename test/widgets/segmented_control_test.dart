@@ -130,6 +130,47 @@ void main() {
     expectThumbOnChosen();
   });
 
+  testWidgets('with reduced motion the thumb and labels change at once', (
+    tester,
+  ) async {
+    Widget build(int value) => TestApp(
+      child: MediaQuery(
+        data: const MediaQueryData(disableAnimations: true),
+        child: Center(
+          child: SegmentedControl<int>(
+            size: TonalButtonSize.compact,
+            segments: const [(0, 'All'), (1, 'Active 12'), (2, 'Failed')],
+            value: value,
+            onChanged: (_) {},
+          ),
+        ),
+      ),
+    );
+    final control = find.byType(SegmentedControl<int>);
+
+    await tester.pumpWidget(build(0));
+    await tester.pumpWidget(build(2));
+
+    final colorScheme = tester.element(control).colorScheme;
+    final thumb = find.descendant(
+      of: control,
+      matching: find.byWidgetPredicate(
+        (widget) =>
+            widget is DecoratedBox &&
+            widget.decoration is ShapeDecoration &&
+            (widget.decoration as ShapeDecoration).color == colorScheme.primary,
+      ),
+    );
+    final chosen = find
+        .descendant(of: control, matching: find.byType(PressSurface))
+        .at(2);
+    expect(tester.getRect(thumb), tester.getRect(chosen));
+    expect(
+      DefaultTextStyle.of(tester.element(find.text('Failed'))).style.color,
+      colorScheme.onPrimary,
+    );
+  });
+
   test('only a sized control stretches', () {
     expect(
       () => SegmentedControl<int>(
