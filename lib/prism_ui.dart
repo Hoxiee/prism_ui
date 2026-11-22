@@ -59,6 +59,7 @@ export 'popup.dart';
 export 'press_region.dart';
 export 'press_sparkle.dart';
 export 'press_surface.dart';
+export 'proportion_bar.dart';
 export 'prism_list.dart';
 export 'route_motion_hold.dart';
 export 'scaffold.dart';
