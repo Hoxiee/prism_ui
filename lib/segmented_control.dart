@@ -3,6 +3,7 @@ import 'package:prism_ui/button.dart';
 import 'package:prism_ui/card_surface.dart';
 import 'package:prism_ui/context.dart';
 import 'package:prism_ui/measure.dart';
+import 'package:prism_ui/metrics.dart';
 import 'package:prism_ui/press_surface.dart';
 import 'package:prism_ui/shape.dart';
 import 'package:prism_ui/surface.dart';
@@ -20,9 +21,8 @@ class SegmentedControl<T> extends StatelessWidget {
     required this.onChanged,
     this.size,
     this.stretches = false,
-  });
+  }) : assert(!stretches || size != null, 'only a sized control stretches');
 
-  static const double _height = 44;
   static const double _inset = 4;
   static const double _sizedInset = 2;
   static const int _sizedLabelInset = 10;
@@ -74,7 +74,7 @@ class SegmentedControl<T> extends StatelessWidget {
       onPressed: option == value ? () {} : () => onChanged(option),
       child: Center(
         child: AnimatedDefaultTextStyle(
-          duration: const Duration(milliseconds: 200),
+          duration: _slideDuration,
           style: styleOf(emphasized: option == value).copyWith(
             color: option == value
                 ? colorScheme.onPrimary
@@ -94,7 +94,7 @@ class SegmentedControl<T> extends StatelessWidget {
     final whole = shares.fold(0, (sum, share) => sum + share);
     return Container(
       width: widths == null ? null : whole + 2 * inset,
-      height: size?.button ?? _height,
+      height: size?.button ?? viewSwitcherHeight,
       padding: EdgeInsets.all(inset),
       decoration: ShapeDecoration(
         color: context.raisedSurfaceLevel.colorOf(colorScheme),

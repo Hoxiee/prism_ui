@@ -130,6 +130,18 @@ void main() {
     expectThumbOnChosen();
   });
 
+  test('only a sized control stretches', () {
+    expect(
+      () => SegmentedControl<int>(
+        segments: const [(0, 'A')],
+        value: 0,
+        onChanged: (_) {},
+        stretches: true,
+      ),
+      throwsAssertionError,
+    );
+  });
+
   testWidgets('a stretched sized control shares the width it is given '
       'equally at its size\'s height', (tester) async {
     tester.view.physicalSize = const Size(400, 200);

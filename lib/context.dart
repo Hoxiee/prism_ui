@@ -32,7 +32,7 @@ extension BuildContextExtension on BuildContext {
   /// A compact sheet's header already trails its own gap.
   double get contentTopPadding =>
       TopInsetScope.of(this) ??
-      (isInCompactSheet ? sheetAppBarHeight : appBarInset + 12);
+      (isInCompactSheet ? sheetAppBarHeight : appBarInset + appBarContentGap);
 
   /// For a page that opens on a section: the section's own gap above it then
   /// lands it where [contentTopPadding] puts any other page's content.
@@ -56,6 +56,10 @@ extension BuildContextExtension on BuildContext {
 
   TextStyle get listTitleStyle =>
       AppTextStyle.body.of(this).copyWith(color: colorScheme.onSurface);
+
+  /// A value at a row's end, set apart from the row's title.
+  TextStyle get listValueStyle =>
+      AppTextStyle.body.of(this).copyWith(color: colorScheme.onSurfaceVariant);
 
   TextStyle get listSubtitleStyle => AppTextStyle.subheadline
       .of(this)

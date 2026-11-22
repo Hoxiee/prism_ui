@@ -30,7 +30,6 @@ part 'list_selected.dart';
 /// A section's title, which grows to fit its action buttons.
 class ListHeader extends StatelessWidget {
   static const _actionSize = TonalButtonSize.section;
-  static const _actionsGap = 6.0;
 
   final String title;
 
@@ -40,6 +39,10 @@ class ListHeader extends StatelessWidget {
   final Widget? trailing;
   final EdgeInsets? padding;
 
+  /// Drops the gap above, for a list's first section where what holds the
+  /// list already spaces it from what sits over it.
+  final bool atTop;
+
   const ListHeader({
     super.key,
     required this.title,
@@ -47,6 +50,7 @@ class ListHeader extends StatelessWidget {
     this.padding,
     this.actions = const [],
     this.trailing,
+    this.atTop = false,
   });
 
   Widget _buildActions() {
@@ -96,10 +100,10 @@ class ListHeader extends StatelessWidget {
     return Padding(
       padding: EdgeInsets.fromLTRB(
         padding.left,
-        math.max(0, padding.top - overhang),
+        atTop ? 0 : math.max(0, padding.top - overhang),
         padding.right,
         hasActions
-            ? math.max(_actionsGap, padding.bottom - overhang)
+            ? math.max(listHeaderGap, padding.bottom - overhang)
             : padding.bottom,
       ),
       child: ConstrainedBox(
@@ -257,14 +261,16 @@ Widget generateSection({
   required Iterable<Widget> items,
   List<IconButtonData> actions = const [],
   String? footer,
+  bool atTop = false,
   bool last = false,
 }) {
   return Column(
     children: [
       if (items.isNotEmpty)
-        title != null
-            ? ListHeader(title: title, actions: actions)
-            : const ListSectionGap(),
+        if (title != null)
+          ListHeader(title: title, actions: actions, atTop: atTop)
+        else if (!atTop)
+          const ListSectionGap(),
       generateGroup(items),
       if (items.isNotEmpty && footer != null)
         ListFooter(text: footer, last: last),
@@ -279,6 +285,7 @@ Widget generateSliverSection<T>({
   required Widget Function(T item) itemBuilder,
   List<IconButtonData> actions = const [],
   String? footer,
+  bool atTop = false,
   bool last = false,
 }) {
   if (items.isEmpty) {
@@ -286,11 +293,12 @@ Widget generateSliverSection<T>({
   }
   return SliverMainAxisGroup(
     slivers: [
-      SliverToBoxAdapter(
-        child: title != null
-            ? ListHeader(title: title, actions: actions)
-            : const ListSectionGap(),
-      ),
+      if (title != null)
+        SliverToBoxAdapter(
+          child: ListHeader(title: title, actions: actions, atTop: atTop),
+        )
+      else if (!atTop)
+        const SliverToBoxAdapter(child: ListSectionGap()),
       SliverPrismList(
         itemCount: items.length,
         itemBuilder: (_, index) => ItemPositionProvider(

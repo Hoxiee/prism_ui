@@ -31,7 +31,7 @@ void main() {
     expect(buttons, findsNWidgets(3));
     for (final index in [0, 1, 2]) {
       final rect = tester.getRect(buttons.at(index));
-      expect(rect.height, ConnectedButtonBar.height);
+      expect(rect.height, viewSwitcherHeight);
       expect(rect.width, 99);
     }
     BorderRadius radiusOf(int index) {

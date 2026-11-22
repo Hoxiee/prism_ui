@@ -29,6 +29,10 @@ class DecorationListItem extends StatefulWidget {
   final double minHeight;
   final bool invalid;
 
+  /// Off for rows something else runs through, such as a rail, which a line
+  /// under each row would cut.
+  final bool separated;
+
   const DecorationListItem({
     super.key,
     this.contentPadding,
@@ -43,6 +47,7 @@ class DecorationListItem extends StatefulWidget {
     this.alignment = ListRowAlignment.center,
     this.minHeight = listRowMinHeight,
     this.invalid = false,
+    this.separated = true,
   });
 
   @override
@@ -72,7 +77,7 @@ class _DecorationListItemState extends State<DecorationListItem> {
       Card.tapTargetOf(context).height,
     );
     final row = _ListRowSeparator(
-      separated: !proxyDecorator && !isEnd,
+      separated: widget.separated && !proxyDecorator && !isEnd,
       emphasized: widget.invalid,
       states: _states,
       endIndent: insets.leading,

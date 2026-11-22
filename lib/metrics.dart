@@ -22,6 +22,19 @@ const infoSectionSpacing = 16.0;
 /// Where a self-drawn section's content starts below its `InfoHeader`.
 const infoSectionContentGap = 8.0;
 
+/// Pads a small card of figures set among a list's sections, tighter than a
+/// page's own cards.
+const figureCardPadding = EdgeInsets.symmetric(horizontal: 16, vertical: 12);
+
+/// The least a section's header leaves above its rows.
+const listHeaderGap = 6.0;
+
+/// A control that switches a page between its views.
+const viewSwitcherHeight = 44.0;
+
+/// A glyph set inline with footnote text.
+const footnoteGlyphSize = 14.0;
+
 /// iOS 27 sets these by the width of the view a list spans, not the list's.
 @immutable
 class ListInsets {
@@ -62,7 +75,7 @@ const listSectionGap = 35.0;
 
 EdgeInsets listHeaderPaddingOf(BuildContext context) {
   final leading = ListInsets.of(context).leading;
-  return EdgeInsets.fromLTRB(leading, listSectionGap, leading, 6) *
+  return EdgeInsets.fromLTRB(leading, listSectionGap, leading, listHeaderGap) *
       1.mAp(context);
 }
 
@@ -91,6 +104,9 @@ const listLeadingSlotWidth = 24.0;
 const pageToolbarHeight = 72.0;
 const sheetToolbarHeight = 48.0;
 const sheetAppBarHeight = 68.0;
+
+/// Where a page's content starts below its app bar.
+const appBarContentGap = 12.0;
 
 /// How far into a page's bar a banner rests: 8 below a root page's title,
 /// whose line ends 51 into the bar, and clear of the bar's 44 buttons.

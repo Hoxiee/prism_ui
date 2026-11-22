@@ -3,6 +3,7 @@ import 'dart:ui' show lerpDouble;
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:prism_ui/context.dart';
+import 'package:prism_ui/metrics.dart';
 import 'package:prism_ui/navigation_dock.dart';
 import 'package:prism_ui/press_region.dart';
 import 'package:prism_ui/shape.dart';
@@ -204,7 +205,6 @@ class ConnectedButtonBar<T> extends StatelessWidget {
     required this.onChanged,
   });
 
-  static const double height = 44;
   static const double _inner = 10;
 
   final List<(T, String)> segments;
@@ -216,7 +216,7 @@ class ConnectedButtonBar<T> extends StatelessWidget {
     final background = context.raisedSurfaceLevel.colorOf(context.colorScheme);
     final style = AppTextStyle.subheadline.of(context, emphasized: true);
     return SizedBox(
-      height: height,
+      height: viewSwitcherHeight,
       child: ConnectedButtonGroup(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -226,7 +226,7 @@ class ConnectedButtonBar<T> extends StatelessWidget {
                 selected: option == value,
                 first: index == 0,
                 last: index == segments.length - 1,
-                outer: height / 2,
+                outer: viewSwitcherHeight / 2,
                 inner: _inner,
                 background: background,
                 semanticLabel: label,

@@ -38,7 +38,8 @@ class MinIconButtonTheme extends StatelessWidget {
   /// 32 minimum, or the padding once the glyph outgrows it.
   static double edgeInsetOf(BuildContext context) {
     final glyph = _glyphSizeOf(context);
-    final minimum = 40 + VisualDensity.compact.baseSizeAdjustment.dx;
+    final minimum =
+        IconButton.minimumSize + VisualDensity.compact.baseSizeAdjustment.dx;
     return (math.max(minimum, glyph + 2 * _padding) - glyph) / 2;
   }
 

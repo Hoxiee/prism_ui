@@ -239,12 +239,12 @@ class IconButton extends StatelessWidget {
   final ButtonStyle? style;
   final bool _filled;
 
-  static const _minimumSize = 40.0;
+  static const minimumSize = 40.0;
 
   /// What a button in the default style leaves beside a [glyphSize] glyph,
   /// its tap target included, for a row that ends the glyph at an inset.
   static double edgeInsetOf(BuildContext context, {double glyphSize = 24}) =>
-      (math.max(_minimumSize, Card.tapTargetOf(context).width) - glyphSize) / 2;
+      (math.max(minimumSize, Card.tapTargetOf(context).width) - glyphSize) / 2;
 
   // As IconButton does, an icon theme around the button colors and sizes it
   // under the button theme.
@@ -290,7 +290,7 @@ class IconButton extends StatelessWidget {
       }),
       shape: AppShape.full,
       padding: const EdgeInsets.all(8),
-      minimumSize: const Size.square(_minimumSize),
+      minimumSize: const Size.square(minimumSize),
       maximumSize: Size.infinite,
       iconSize: 24,
       visualDensity: VisualDensity.standard,
