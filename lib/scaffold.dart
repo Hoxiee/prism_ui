@@ -17,6 +17,7 @@ import 'button.dart';
 import 'common_button.dart';
 import 'inherited.dart';
 import 'loading.dart';
+import 'popup.dart';
 import 'sheet.dart';
 import 'sheet_header.dart';
 import 'bar_item_presence.dart';
@@ -409,8 +410,7 @@ class AppBarActionButton extends StatelessWidget {
   /// Stands in for the glyph of [data].
   final Widget? icon;
 
-  @override
-  Widget build(BuildContext context) {
+  Widget _button(BuildContext context, VoidCallback? onPressed) {
     final colorScheme = context.colorScheme;
     return IconButton(
       tooltip: data.tooltip,
@@ -423,10 +423,22 @@ class AppBarActionButton extends StatelessWidget {
               foregroundColor: colorScheme.onPrimary,
             )
           : null,
-      onPressed: data.isLoading ? null : data.onPressed,
+      onPressed: data.isLoading ? null : onPressed,
       icon: data.isLoading
           ? ActivityIndicator(size: TonalButtonSize.bar.icon)
           : BarItemGlyph(child: icon ?? GlyphIcon(data.glyph)),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final menuItems = data.menuItems;
+    if (menuItems == null) {
+      return _button(context, data.onPressed);
+    }
+    return PopupAnchor(
+      targetBuilder: (open) => _button(context, open),
+      popupBuilder: (_) => PopupMenu(items: menuItems()),
     );
   }
 }
