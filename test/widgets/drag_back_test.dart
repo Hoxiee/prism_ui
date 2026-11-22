@@ -730,4 +730,39 @@ void main() {
     expect(find.text('top'), findsNothing);
     expect(find.text('open'), findsOneWidget);
   });
+
+  testWidgets('a drag back snapshots the top page before it moves', (
+    tester,
+  ) async {
+    late CardPageRoute<void> route;
+    await _pumpOpener(tester, (context) {
+      route = CardPageRoute<void>(
+        builder: (_) => const HostScaffold(
+          body: Align(alignment: Alignment.topLeft, child: Text('top')),
+        ),
+      );
+      Navigator.of(context).push(route);
+    });
+
+    List<bool> snapshots() => [
+      for (final widget in tester.widgetList<SnapshotWidget>(
+        find.byType(SnapshotWidget, skipOffstage: false),
+      ))
+        widget.controller.allowSnapshotting,
+    ];
+
+    expect(snapshots(), [false, false]);
+
+    final gesture = await tester.startGesture(const Offset(12, 300));
+    await gesture.moveBy(const Offset(31, 0));
+    await tester.pump();
+    expect(route.isDragBackActive, isTrue);
+    expect(route.animation!.value, 1.0);
+    expect(snapshots(), [false, true]);
+
+    await gesture.up();
+    await tester.pumpAndSettle();
+    expect(route.isDragBackActive, isFalse);
+    expect(snapshots(), [false, false]);
+  });
 }

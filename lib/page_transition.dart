@@ -151,8 +151,14 @@ mixin CardRouteMixin<T> on ModalRoute<T> {
 
   final _coveringOverdrag = ValueNotifier(0.0);
   ValueListenable<double>? _nextOverdrag;
+  ValueListenable<bool>? _userGesture;
 
   void _copyOverdrag() => _coveringOverdrag.value = _nextOverdrag?.value ?? 0;
+
+  bool get _isDragBackActive => switch (this) {
+    final DragBackRouteMixin<T> route => route.isDragBackActive,
+    _ => false,
+  };
 
   ValueListenable<double> get _overdrag => switch (this) {
     final DragBackRouteMixin<T> route => route.dragBackOverdrag,
@@ -187,7 +193,10 @@ mixin CardRouteMixin<T> on ModalRoute<T> {
     final animation = this.animation!;
     return (
       lifted: false,
-      moving: animation.isAnimating || secondary.isAnimating,
+      moving:
+          animation.isAnimating ||
+          secondary.isAnimating ||
+          (!recedesCovered && _isDragBackActive),
       shown: hasCome(animation) && !hasCome(secondary),
       tracking: null,
     );
@@ -210,8 +219,10 @@ mixin CardRouteMixin<T> on ModalRoute<T> {
         ? animation.isCompleted && secondary.isAnimating
         : (secondary.status == AnimationStatus.forward && !dragged) ||
               (!recedesCovered &&
-                  animation.status.isAnimating &&
-                  (animation.status == AnimationStatus.reverse || dragged));
+                  ((animation.status.isAnimating &&
+                          (animation.status == AnimationStatus.reverse ||
+                              dragged)) ||
+                      _isDragBackActive));
   }
 
   void retakeSnapshot() {
@@ -225,6 +236,11 @@ mixin CardRouteMixin<T> on ModalRoute<T> {
   void _handleStatus(AnimationStatus _) {
     _updateMotionSnapshot();
     updateBarItems();
+  }
+
+  void _handleUserGesture() {
+    updateBarItems();
+    _updateMotionSnapshot();
   }
 
   @override
@@ -288,6 +304,8 @@ mixin CardRouteMixin<T> on ModalRoute<T> {
     _coveredByZoom
       ..addListener(_updateMotionSnapshot)
       ..addListener(updateBarItems);
+    _userGesture = navigator?.userGestureInProgressNotifier
+      ?..addListener(_handleUserGesture);
   }
 
   @override
@@ -298,6 +316,7 @@ mixin CardRouteMixin<T> on ModalRoute<T> {
     secondaryAnimation!
       ..removeListener(updateBarItems)
       ..removeStatusListener(_handleStatus);
+    _userGesture?.removeListener(_handleUserGesture);
     _nextOverdrag?.removeListener(_copyOverdrag);
     _coveringOverdrag.dispose();
     _coveredByZoom.dispose();
