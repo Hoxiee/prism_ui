@@ -83,7 +83,7 @@ class Measure {
 
   double get listTwoLineRowHeight => max(
     listRowMinHeight,
-    listTitleHeight + listSubtitleHeight + 2 * listRowVerticalPadding,
+    listTitleHeight + listSubtitleHeight + 2 * listTwoLineRowVerticalPadding,
   );
 }
 

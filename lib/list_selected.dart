@@ -7,8 +7,8 @@ BorderRadius listItemRadiusOf(ItemPosition? position) {
   final isStart =
       position == ItemPosition.start || position == ItemPosition.startAndEnd;
   return AppRadius.vertical(
-    top: isStart ? AppCorner.xl : AppCorner.none,
-    bottom: _isEnd(position) ? AppCorner.xl : AppCorner.none,
+    top: isStart ? AppCorner.listGroup : AppCorner.none,
+    bottom: _isEnd(position) ? AppCorner.listGroup : AppCorner.none,
   );
 }
 
@@ -22,6 +22,11 @@ class DecorationListItem extends StatefulWidget {
   final EdgeInsetsGeometry? contentPadding;
   final VoidCallback? onPressed;
   final double? minVerticalPadding;
+  final ListRowAlignment alignment;
+
+  /// Never under the card's tap target, which would space the row apart from
+  /// the rows it groups with.
+  final double minHeight;
   final bool invalid;
 
   const DecorationListItem({
@@ -35,6 +40,8 @@ class DecorationListItem extends StatefulWidget {
     this.onPressed,
     this.horizontalTitleGap,
     this.minVerticalPadding,
+    this.alignment = ListRowAlignment.center,
+    this.minHeight = listRowMinHeight,
     this.invalid = false,
   });
 
@@ -59,11 +66,16 @@ class _DecorationListItemState extends State<DecorationListItem> {
     final sorting = sortable?.sorting ?? false;
     final position = ItemPositionProvider.of(context)?.position;
     final isEnd = _isEnd(position);
+    final insets = context.listInsets;
+    final minHeight = math.max(
+      widget.minHeight,
+      Card.tapTargetOf(context).height,
+    );
     final row = _ListRowSeparator(
       separated: !proxyDecorator && !isEnd,
       emphasized: widget.invalid,
       states: _states,
-      endIndent: 14,
+      endIndent: insets.leading,
       child: Card(
         shape: AppShape.of(listItemRadiusOf(position)),
         isError: widget.invalid,
@@ -80,11 +92,25 @@ class _DecorationListItemState extends State<DecorationListItem> {
                   : IgnorePointer(ignoring: sorting, child: widget.leading),
               padding:
                   widget.contentPadding ??
-                  const EdgeInsets.only(right: 16, left: 16),
+                  EdgeInsetsDirectional.only(
+                    start: insets.leading,
+                    end: widget.trailing == null
+                        ? insets.leading
+                        : insets.trailing,
+                  ),
               title: _ListRowSeparatorStart(child: widget.title),
               subtitle: widget.subtitle,
               minVerticalPadding:
-                  widget.minVerticalPadding ?? listRowVerticalPadding,
+                  widget.minVerticalPadding ??
+                  (widget.subtitle == null && minHeight < listRowMinHeight
+                      ? math.max(
+                          0.0,
+                          listRowVerticalPadding -
+                              (listRowMinHeight - minHeight) / 2,
+                        )
+                      : null),
+              minHeight: minHeight,
+              alignment: widget.alignment,
               horizontalTitleGap: widget.horizontalTitleGap,
               trailing: sortable == null
                   ? widget.trailing
@@ -104,7 +130,7 @@ class _DecorationListItemState extends State<DecorationListItem> {
     // A change of the card's shape eases in over the button's own animation
     // duration, which would trail the lift; the clip follows it frame by frame.
     return ClipRSuperellipse(
-      borderRadius: AppRadius.all(AppCorner.xl * proxy!.lift),
+      borderRadius: AppRadius.all(AppCorner.listGroup * proxy!.lift),
       child: row,
     );
   }
@@ -141,7 +167,10 @@ class SelectedDecorationListItem extends StatelessWidget {
     return DecorationListItem(
       title: title,
       minVerticalPadding: minVerticalPadding,
-      contentPadding: const EdgeInsets.only(left: 16, right: 0),
+      contentPadding: EdgeInsetsDirectional.only(
+        start: context.listInsets.leading,
+        end: context.listInsets.trailing - Checkbox.edgeInset,
+      ),
       isSelected: isSelected,
       invalid: invalid,
       leading: leading,

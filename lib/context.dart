@@ -45,6 +45,8 @@ extension BuildContextExtension on BuildContext {
   double get bottomInset =>
       BottomInsetScope.of(this) + MediaQuery.paddingOf(this).bottom;
 
+  ListInsets get listInsets => ListInsets.of(this);
+
   ColorScheme get colorScheme => Theme.of(this).colorScheme;
 
   bool get disableAnimations => MediaQuery.disableAnimationsOf(this);
