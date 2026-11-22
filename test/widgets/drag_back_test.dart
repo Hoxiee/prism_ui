@@ -765,4 +765,112 @@ void main() {
     expect(route.isDragBackActive, isFalse);
     expect(snapshots(), [false, false]);
   });
+
+  for (final direction in TextDirection.values) {
+    testWidgets('a covered card route clips its paint to the uncovered strip '
+        '(${direction.name})', (tester) async {
+      final navKey = GlobalKey<NavigatorState>();
+      const size = Size(412, 892);
+      tester.view.devicePixelRatio = 2;
+      tester.view.physicalSize = size * 2;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(
+        MediaQuery(
+          data: const MediaQueryData(
+            size: size,
+            devicePixelRatio: 2,
+            displayCornerRadii: BorderRadius.all(Radius.circular(40)),
+          ),
+          child: HostApp(
+            navigatorKey: navKey,
+            builder: (_, child) =>
+                Directionality(textDirection: direction, child: child!),
+            home: const HostScaffold(body: Text('home')),
+          ),
+        ),
+      );
+      navKey.currentState!.push(
+        CardPageRoute<void>(
+          builder: (_) => const HostScaffold(body: Text('top')),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      List<ClipRectLayer> narrowClips() {
+        final found = <ClipRectLayer>[];
+        void walk(Layer? layer) {
+          if (layer == null) {
+            return;
+          }
+          if (layer is ClipRectLayer &&
+              layer.clipBehavior == Clip.hardEdge &&
+              layer.clipRect != null &&
+              layer.clipRect!.height == size.height &&
+              layer.clipRect!.width < size.width) {
+            found.add(layer);
+          }
+          if (layer is ContainerLayer) {
+            for (
+              var child = layer.firstChild;
+              child != null;
+              child = child.nextSibling
+            ) {
+              walk(child);
+            }
+          }
+        }
+
+        walk(tester.binding.renderViews.first.debugLayer);
+        return found;
+      }
+
+      int rsuperClips() {
+        var count = 0;
+        void walk(Layer? layer) {
+          if (layer == null) {
+            return;
+          }
+          if (layer is ClipRSuperellipseLayer) {
+            count++;
+          }
+          if (layer is ContainerLayer) {
+            for (
+              var child = layer.firstChild;
+              child != null;
+              child = child.nextSibling
+            ) {
+              walk(child);
+            }
+          }
+        }
+
+        walk(tester.binding.renderViews.first.debugLayer);
+        return count;
+      }
+
+      final sign = direction == TextDirection.ltr ? 1.0 : -1.0;
+      final startX = direction == TextDirection.ltr ? 12.0 : size.width - 12.0;
+      final gesture = await tester.startGesture(Offset(startX, 300));
+      await gesture.moveBy(Offset(31 * sign, 0));
+      await tester.pump();
+      await gesture.moveBy(Offset(20 * sign, 0));
+      await tester.pump(const Duration(milliseconds: 16));
+
+      final clips = narrowClips();
+      expect(clips, hasLength(1));
+      final rect = clips.single.clipRect!;
+      expect(rect.width, lessThan(size.width * 0.4));
+      if (direction == TextDirection.ltr) {
+        expect(rect.left, 0);
+      } else {
+        expect(rect.right, size.width);
+      }
+      expect(rsuperClips(), 1);
+
+      await gesture.up();
+      await tester.pumpAndSettle();
+      expect(narrowClips(), isEmpty);
+    });
+  }
 }
