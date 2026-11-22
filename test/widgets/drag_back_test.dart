@@ -872,5 +872,67 @@ void main() {
       await tester.pumpAndSettle();
       expect(narrowClips(), isEmpty);
     });
+
+    testWidgets('a covered card route stays unclipped during leading overdrag '
+        '(${direction.name})', (tester) async {
+      final navKey = GlobalKey<NavigatorState>();
+      const size = Size(412, 892);
+      tester.view.devicePixelRatio = 2;
+      tester.view.physicalSize = size * 2;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(
+        MediaQuery(
+          data: const MediaQueryData(
+            size: size,
+            devicePixelRatio: 2,
+            displayCornerRadii: BorderRadius.all(Radius.circular(40)),
+          ),
+          child: HostApp(
+            navigatorKey: navKey,
+            builder: (_, child) => ColoredBox(
+              color: const Color(0xFFFF00FF),
+              child: Directionality(textDirection: direction, child: child!),
+            ),
+            home: const HostScaffold(body: Text('home')),
+          ),
+        ),
+      );
+      navKey.currentState!.push(
+        CardPageRoute<void>(
+          builder: (_) => const HostScaffold(body: Text('top')),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final backdrop = ColorScheme.of(
+        tester.element(find.text('top')),
+      ).surfaceContainerLowest;
+      final expected = Color.alphaBlend(
+        const Color.from(alpha: 0.1, red: 0, green: 0, blue: 0),
+        backdrop,
+      );
+
+      final sign = direction == TextDirection.ltr ? 1.0 : -1.0;
+      final gesture = await tester.startGesture(Offset(size.width / 2, 300));
+      await gesture.moveBy(Offset(31 * sign, 0));
+      await gesture.moveBy(Offset(-100 * sign, 0));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      final sample = await _pixelAt(
+        tester,
+        Offset(
+          direction == TextDirection.ltr ? size.width - 10 : 10,
+          size.height / 2,
+        ),
+      );
+      expect((sample.r - expected.r).abs(), lessThan(2 / 255));
+      expect((sample.g - expected.g).abs(), lessThan(2 / 255));
+      expect((sample.b - expected.b).abs(), lessThan(2 / 255));
+
+      await gesture.up();
+      await tester.pumpAndSettle();
+    });
   }
 }

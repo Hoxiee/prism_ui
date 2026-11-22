@@ -827,12 +827,16 @@ class _RenderCardTransition extends RenderProxyBox {
         _recedes ||
         !_animation.isCompleted ||
         covered <= 0 ||
+        covered >= 1 ||
         size.isEmpty) {
       return null;
     }
     final coverSpan =
         ((1 - covered) * size.width * _devicePixelRatio).roundToDouble() /
         _devicePixelRatio;
+    if (coverSpan <= 0) {
+      return null;
+    }
     final rtl = _textDirection == TextDirection.rtl;
     final leadingCorner = rtl
         ? math.max(_radius.topRight.x, _radius.bottomRight.x)
