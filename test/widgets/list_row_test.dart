@@ -182,4 +182,25 @@ void main() {
     );
     expect(tester.renderObject<RenderBox>(row).getMinIntrinsicHeight(360), 56);
   });
+
+  testWidgets('a row measures as tall as it lays out when a value narrows '
+      'the title it wraps', (tester) async {
+    await pumpRow(
+      tester,
+      width: 360,
+      title: _mixed,
+      trailing: const Text('Auto Select', key: Key('value')),
+    );
+
+    final row = find.byType(ListRow);
+    final height = tester.getSize(row).height;
+    expect(
+      tester.getSize(find.byKey(const Key('title'))).width,
+      lessThan(360 - _rowInsets - 100),
+    );
+    expect(
+      tester.renderObject<RenderBox>(row).getMinIntrinsicHeight(360),
+      height,
+    );
+  });
 }

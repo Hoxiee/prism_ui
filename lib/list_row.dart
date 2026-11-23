@@ -327,19 +327,10 @@ class _RenderListRow extends RenderBox
   );
 
   @override
-  double computeMinIntrinsicHeight(double width) {
-    final inner = math.max(0.0, width - _padding.horizontal);
-    double? side(RenderBox? box) => box == null
-        ? null
-        : math.min(box.getMinIntrinsicHeight(inner), _maxSideHeight);
-    return _rowHeight(
-          _title.getMinIntrinsicHeight(inner),
-          _subtitle?.getMinIntrinsicHeight(inner),
-          side(_leading),
-          side(_trailing),
-        ) +
-        _padding.vertical;
-  }
+  double computeMinIntrinsicHeight(double width) => _computeSizes(
+    ChildLayoutHelper.dryLayoutChild,
+    BoxConstraints(maxWidth: width),
+  ).size.height;
 
   @override
   double computeMaxIntrinsicHeight(double width) =>
