@@ -4,7 +4,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:prism_ui/common_button.dart';
 import 'package:prism_ui/context.dart';
-import 'package:prism_ui/list_text.dart';
+import 'package:prism_ui/measure.dart';
 import 'package:prism_ui/metrics.dart';
 import 'package:prism_ui/theme_data.dart';
 import 'package:prism_ui/typography.dart';
@@ -83,7 +83,7 @@ class ListRow extends StatelessWidget {
               (subtitle == null
                   ? listRowVerticalPadding
                   : listTwoLineRowVerticalPadding),
-          minHeight: minHeight ?? context.listLineRowHeight,
+          minHeight: minHeight ?? context.listRowHeight,
           alignment: alignment,
           leading: leading == null
               ? null

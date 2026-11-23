@@ -72,7 +72,7 @@ class _DecorationListItemState extends State<DecorationListItem> {
     final position = ItemPositionProvider.of(context)?.position;
     final isEnd = _isEnd(position);
     final insets = context.listInsets;
-    final rowHeight = context.listLineRowHeight;
+    final rowHeight = context.listRowHeight;
     final minHeight = math.max(
       widget.minHeight ?? rowHeight,
       Card.tapTargetOf(context).height,
