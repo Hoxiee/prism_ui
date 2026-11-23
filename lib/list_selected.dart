@@ -72,11 +72,17 @@ class _DecorationListItemState extends State<DecorationListItem> {
     final position = ItemPositionProvider.of(context)?.position;
     final isEnd = _isEnd(position);
     final insets = context.listInsets;
-    final rowHeight = context.listRowHeight;
     final minHeight = math.max(
-      widget.minHeight ?? rowHeight,
+      widget.minHeight ?? context.listRowHeight,
       Card.tapTargetOf(context).height,
     );
+    final unscaledRowHeight = listRowExtent(
+      titleHeight: ListTextScope.of(context).title.leading,
+    );
+    final shortRow =
+        widget.minHeight != null &&
+        widget.subtitle == null &&
+        minHeight < unscaledRowHeight;
     final row = _ListRowSeparator(
       separated: widget.separated && !proxyDecorator && !isEnd,
       emphasized: widget.invalid,
@@ -108,10 +114,11 @@ class _DecorationListItemState extends State<DecorationListItem> {
               subtitle: widget.subtitle,
               minVerticalPadding:
                   widget.minVerticalPadding ??
-                  (widget.subtitle == null && minHeight < rowHeight
+                  (shortRow
                       ? math.max(
                           0.0,
-                          listRowVerticalPadding - (rowHeight - minHeight) / 2,
+                          listRowVerticalPadding -
+                              (unscaledRowHeight - minHeight) / 2,
                         )
                       : null),
               minHeight: minHeight,

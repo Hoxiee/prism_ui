@@ -107,6 +107,35 @@ void main() {
     );
   });
 
+  for (final textScale in [1.0, 1.3, 2.0]) {
+    testWidgets('a row asked to stand 48 keeps the padding it has at the '
+        'default text size at ${textScale}x', (tester) async {
+      tester.platformDispatcher.textScaleFactorTestValue = textScale;
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+      await tester.pumpWidget(
+        TestApp(
+          child: HostScaffold(
+            body: Column(
+              children: [
+                DecorationListItem(
+                  title: const Text('short'),
+                  minHeight: 48,
+                  onPressed: () {},
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      expect(
+        tester.getSize(row('short')).height -
+            tester.getSize(find.text('short')).height,
+        26,
+      );
+    });
+  }
+
   testWidgets('a section rounds its ends with the list corner as a '
       'superellipse', (tester) async {
     await pumpSection(tester, 402);
