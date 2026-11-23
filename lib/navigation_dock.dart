@@ -27,13 +27,15 @@ const double _edgeMargin = 21;
 const double _shadowRoom = 8;
 const double _hitSlop = 8;
 const double _maxItemExtent = 86;
-const double _minLensWidth = 84;
+const double _minPitch = 68;
+const double _crowdedOverhang = 10;
 const _fullWidthCount = 5;
 const double _iconSize = 28;
-const double _labelGap = 2;
+const double _labelGap = 1;
 const double _labelInset = 2;
 const double _labelSize = 10;
-const double _labelLeading = 14.5;
+const double _labelLeading = 12;
+const double _contentLift = 1;
 const double _minLabelSize = 9;
 const double _pressGrowth = 1 / 8;
 const double _maxPressGrowth = 16;
@@ -131,7 +133,8 @@ Rect _lensRect({
 }
 
 /// Spaces destinations as iOS's tab bar does: the resting lens overhangs its
-/// destination by [_barPadding] and never narrows below [_minLensWidth].
+/// destination by [_barPadding], or by [_crowdedOverhang] once destinations
+/// would stand closer than [_minPitch].
 ({double pitch, double lens, double inset}) _dockLayout(
   double span,
   int count,
@@ -139,13 +142,11 @@ Rect _lensRect({
   if (count <= 1) {
     return (pitch: span - _barPadding * 2, lens: span, inset: _barPadding);
   }
-  final pitch = (span - _barPadding * 2) / count;
-  if (pitch + _barPadding * 2 >= _minLensWidth) {
-    return (pitch: pitch, lens: pitch + _barPadding * 2, inset: _barPadding);
-  }
-  final lens = math.min(_minLensWidth, span);
-  final closed = (span - lens) / (count - 1);
-  return (pitch: closed, lens: lens, inset: (lens - closed) / 2);
+  final overhang = (span - _barPadding * 2) / count < _minPitch
+      ? _crowdedOverhang
+      : _barPadding;
+  final pitch = (span - overhang * 2) / count;
+  return (pitch: pitch, lens: pitch + overhang * 2, inset: overhang);
 }
 
 /// A value that springs toward a target the finger may move every frame.
@@ -1688,7 +1689,12 @@ class _FloatingBarItemState extends State<_FloatingBarItem> {
       color: tint,
       textDirection: Directionality.of(context),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: _labelInset),
+        padding: const EdgeInsets.fromLTRB(
+          _labelInset,
+          0,
+          _labelInset,
+          _contentLift,
+        ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
