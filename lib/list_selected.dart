@@ -26,7 +26,7 @@ class DecorationListItem extends StatefulWidget {
 
   /// Never under the card's tap target, which would space the row apart from
   /// the rows it groups with.
-  final double minHeight;
+  final double? minHeight;
   final bool invalid;
 
   /// Off for rows something else runs through, such as a rail, which a line
@@ -45,7 +45,7 @@ class DecorationListItem extends StatefulWidget {
     this.horizontalTitleGap,
     this.minVerticalPadding,
     this.alignment = ListRowAlignment.center,
-    this.minHeight = listRowMinHeight,
+    this.minHeight,
     this.invalid = false,
     this.separated = true,
   });
@@ -72,8 +72,9 @@ class _DecorationListItemState extends State<DecorationListItem> {
     final position = ItemPositionProvider.of(context)?.position;
     final isEnd = _isEnd(position);
     final insets = context.listInsets;
+    final rowHeight = context.listLineRowHeight;
     final minHeight = math.max(
-      widget.minHeight,
+      widget.minHeight ?? rowHeight,
       Card.tapTargetOf(context).height,
     );
     final row = _ListRowSeparator(
@@ -107,11 +108,10 @@ class _DecorationListItemState extends State<DecorationListItem> {
               subtitle: widget.subtitle,
               minVerticalPadding:
                   widget.minVerticalPadding ??
-                  (widget.subtitle == null && minHeight < listRowMinHeight
+                  (widget.subtitle == null && minHeight < rowHeight
                       ? math.max(
                           0.0,
-                          listRowVerticalPadding -
-                              (listRowMinHeight - minHeight) / 2,
+                          listRowVerticalPadding - (rowHeight - minHeight) / 2,
                         )
                       : null),
               minHeight: minHeight,

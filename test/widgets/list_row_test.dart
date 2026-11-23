@@ -164,4 +164,22 @@ void main() {
       value.getMaxIntrinsicWidth(double.infinity),
     );
   });
+
+  testWidgets('a side taller than its text stands the row as tall, laid out '
+      'and measured', (tester) async {
+    await pumpRow(
+      tester,
+      width: 360,
+      title: 'Flags',
+      trailing: const SizedBox(key: Key('value'), width: 40, height: 56),
+    );
+
+    final row = find.byType(ListRow);
+    expect(tester.getSize(row).height, 56);
+    expect(
+      tester.getTopLeft(find.byKey(const Key('value'))).dy,
+      tester.getTopLeft(row).dy,
+    );
+    expect(tester.renderObject<RenderBox>(row).getMinIntrinsicHeight(360), 56);
+  });
 }
