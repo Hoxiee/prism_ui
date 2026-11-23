@@ -16,7 +16,6 @@ import 'package:prism_ui/measure.dart';
 import 'package:prism_ui/metrics.dart';
 import 'package:prism_ui/models.dart';
 import 'package:prism_ui/shape.dart';
-import 'package:prism_ui/typography.dart';
 
 import 'button.dart';
 import 'card.dart';
@@ -82,9 +81,8 @@ class ListHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final padding = this.padding ?? listHeaderPaddingOf(context);
-    final lineHeight = MeasureScope.of(
-      context,
-    ).textHeight(AppTextStyle.headline);
+    final header = ListTextScope.of(context).header;
+    final lineHeight = MeasureScope.of(context).textHeight(header);
     final caption = this.caption;
     final hasActions = actions.isNotEmpty || trailing != null;
     final overhang = caption == null && hasActions
@@ -94,8 +92,8 @@ class ListHeader extends StatelessWidget {
       title,
       maxLines: 2,
       overflow: TextOverflow.ellipsis,
-      style: AppTextStyle.headline
-          .of(context)
+      style: header
+          .of(context, emphasized: true)
           .copyWith(color: context.colorScheme.onSurfaceVariant),
     );
     return Padding(
