@@ -8,6 +8,7 @@ import 'package:prism_ui/drag_back.dart';
 import 'package:prism_ui/keyboard_inset_hold.dart';
 import 'package:prism_ui/liquid_glass.dart';
 import 'package:prism_ui/page_transition.dart';
+import 'package:prism_ui/route_scope.dart';
 import 'package:prism_ui/sheet_navigator.dart';
 
 final rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -75,7 +76,7 @@ class _DropWatchState extends State<_DropWatch> {
 /// The route of the page [context] is on and, for a page in a sheet, the
 /// routes of the sheets carrying it.
 Iterable<ModalRoute<Object?>> routesCarrying(BuildContext context) sync* {
-  var route = ModalRoute.of(context);
+  var route = routeOf(context);
   while (route != null) {
     yield route;
     final navigator = route.navigator;
@@ -84,7 +85,7 @@ Iterable<ModalRoute<Object?>> routesCarrying(BuildContext context) sync* {
         navigator.widget is! SheetPagesNavigator) {
       return;
     }
-    route = ModalRoute.of(navigator.context);
+    route = routeOf(navigator.context);
   }
 }
 
@@ -180,7 +181,7 @@ class _RootPageRoute<T> extends PageRoute<T> {
       explicitChildNodes: true,
       child: _StillUnderSheet(
         cover: sheetCoverOfRoute(this),
-        child: (settings as RootPage<T>).child,
+        child: scopePageRoute(this, (settings as RootPage<T>).child),
       ),
     );
   }
@@ -266,7 +267,7 @@ class FadePageRoute<T> extends PageRoute<T>
     return Semantics(
       scopesRoute: true,
       explicitChildNodes: true,
-      child: KeyboardInsetHold(child: builder(context)),
+      child: KeyboardInsetHold(child: scopePageRoute(this, builder(context))),
     );
   }
 
@@ -315,7 +316,7 @@ class CardPageRoute<T> extends PageRoute<T>
     return Semantics(
       scopesRoute: true,
       explicitChildNodes: true,
-      child: KeyboardInsetHold(child: builder(context)),
+      child: KeyboardInsetHold(child: scopePageRoute(this, builder(context))),
     );
   }
 }

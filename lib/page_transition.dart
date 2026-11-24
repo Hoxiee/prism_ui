@@ -11,6 +11,7 @@ import 'package:prism_ui/motion.dart';
 import 'package:prism_ui/sheet_navigator.dart';
 import 'package:prism_ui/surface.dart';
 import 'package:prism_ui/theme_data.dart';
+import 'package:prism_ui/route_scope.dart';
 
 /// iOS 27 pushes and pops a page on a critically damped spring of 0.3 s that
 /// sets off at nine times its distance a second, as measured on the simulator.
@@ -485,7 +486,7 @@ class HomeRoute<T> extends PageRoute<T> with CardRouteMixin<T> {
     return Semantics(
       scopesRoute: true,
       explicitChildNodes: true,
-      child: builder(context),
+      child: scopePageRoute(this, builder(context)),
     );
   }
 }

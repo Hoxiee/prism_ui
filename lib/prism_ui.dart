@@ -64,6 +64,7 @@ export 'press_surface.dart';
 export 'proportion_bar.dart';
 export 'prism_list.dart';
 export 'route_motion_hold.dart';
+export 'route_scope.dart';
 export 'scaffold.dart';
 export 'scroll.dart';
 export 'scroll_behavior.dart';

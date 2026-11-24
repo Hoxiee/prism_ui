@@ -5,6 +5,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
 import 'package:prism_ui/navigator.dart';
 import 'package:prism_ui/sheet_navigator.dart';
+import 'package:prism_ui/route_scope.dart';
 
 class _RouteMotion {
   _RouteMotion(BuildContext context)
@@ -89,7 +90,7 @@ mixin RouteMotionHoldMixin<T extends StatefulWidget> on State<T> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final route = ModalRoute.of(context);
+    final route = routeOf(context);
     if (_motion != null && identical(route, _route)) {
       return;
     }
