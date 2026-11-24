@@ -22,6 +22,7 @@ import 'package:prism_ui/press_surface.dart';
 import 'package:prism_ui/shape.dart';
 import 'package:prism_ui/sheet_navigator.dart';
 import 'package:prism_ui/surface.dart';
+import 'package:prism_ui/text_style.dart';
 import 'package:prism_ui/theme_data.dart';
 import 'package:prism_ui/typography.dart';
 
@@ -49,6 +50,7 @@ const _itemRadius = AppCorner.md;
 const _cardRadius = _itemRadius + _cardInset;
 
 const _itemIconSize = 20.0;
+const _detailGap = 8.0;
 const _submenuArrowSize = 16.0;
 
 const _itemPadding = EdgeInsets.symmetric(horizontal: 12, vertical: 12);
@@ -1822,6 +1824,7 @@ class _PopupPressRecognizer extends OneSequenceGestureRecognizer {
 class PopupMenuItem {
   const PopupMenuItem({
     required this.label,
+    this.detail,
     this.subtitle,
     this.glyph,
     this.onPressed,
@@ -1833,6 +1836,9 @@ class PopupMenuItem {
   });
 
   final String label;
+
+  /// Follows [label] on its line in the secondary color, such as a count.
+  final String? detail;
   final String? subtitle;
   final Glyph? glyph;
   final VoidCallback? onPressed;
@@ -2051,6 +2057,7 @@ class _PopupMenuState extends State<PopupMenu>
     final root = DefaultTextStyle.of(context).style.merge(style);
     final textScaler = MediaQuery.textScalerOf(context);
     final boldText = MediaQuery.boldTextOf(context);
+    final tabular = root.toTabular;
     const limit = _menuMaxWidth - 2 * _cardInset;
     var width = 0.0;
     for (final item in items) {
@@ -2059,11 +2066,19 @@ class _PopupMenuState extends State<PopupMenu>
       }
       final label = _labelWidths[(item.label, root, textScaler, boldText)] ??=
           EmojiText.widthOf(context, item.label, root);
+      final detail = switch (item.detail) {
+        null => 0.0,
+        final detail =>
+          _detailGap +
+              (_labelWidths[(detail, tabular, textScaler, boldText)] ??=
+                  EmojiText.widthOf(context, detail, tabular)),
+      };
       final checked = item.checked == true;
       final row =
           (checked ? _itemArrowPadding : _itemPadding).horizontal +
           (item.glyph != null ? _itemIconSize + 12 : 0) +
           label +
+          detail +
           (checked ? 8 + _submenuArrowSize : 0);
       width = math.max(width, row);
       if (width >= limit) {
@@ -2424,14 +2439,7 @@ class _PopupMenuState extends State<PopupMenu>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    EmojiText(
-                      item.label,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTextStyle.subheadline
-                          .of(context)
-                          .copyWith(color: foregroundColor),
-                    ),
+                    _buildLabel(context, item, foregroundColor, enabled),
                     if (item.subtitle case final subtitle?)
                       EmojiText(
                         subtitle,
@@ -2468,6 +2476,39 @@ class _PopupMenuState extends State<PopupMenu>
         checked: item.checked == null ? null : _isChecked(item),
         child: child,
       ),
+    );
+  }
+
+  Widget _buildLabel(
+    BuildContext context,
+    PopupMenuItem item,
+    Color color,
+    bool enabled,
+  ) {
+    final style = AppTextStyle.subheadline.of(context);
+    final label = EmojiText(
+      item.label,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: style.copyWith(color: color),
+    );
+    final detail = item.detail;
+    if (detail == null) {
+      return label;
+    }
+    final secondary = context.colorScheme.onSurfaceVariant;
+    return Row(
+      spacing: _detailGap,
+      children: [
+        Flexible(child: label),
+        EmojiText(
+          detail,
+          maxLines: 1,
+          style: style.toTabular.copyWith(
+            color: enabled ? secondary : secondary.opacity30,
+          ),
+        ),
+      ],
     );
   }
 
