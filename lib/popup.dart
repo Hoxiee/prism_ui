@@ -2054,10 +2054,11 @@ class _PopupMenuState extends State<PopupMenu>
   /// labels as the rows lay them out.
   double _lazyWidthOf(BuildContext context, List<PopupMenuItem> items) {
     final style = AppTextStyle.subheadline.of(context);
-    final root = DefaultTextStyle.of(context).style.merge(style);
+    final inherited = DefaultTextStyle.of(context).style;
+    final root = inherited.merge(style);
+    final tabular = inherited.merge(_detailStyleOf(style));
     final textScaler = MediaQuery.textScalerOf(context);
     final boldText = MediaQuery.boldTextOf(context);
-    final tabular = root.toTabular;
     const limit = _menuMaxWidth - 2 * _cardInset;
     var width = 0.0;
     for (final item in items) {
@@ -2479,6 +2480,8 @@ class _PopupMenuState extends State<PopupMenu>
     );
   }
 
+  static TextStyle _detailStyleOf(TextStyle labelStyle) => labelStyle.toTabular;
+
   Widget _buildLabel(
     BuildContext context,
     PopupMenuItem item,
@@ -2504,9 +2507,9 @@ class _PopupMenuState extends State<PopupMenu>
         EmojiText(
           detail,
           maxLines: 1,
-          style: style.toTabular.copyWith(
-            color: enabled ? secondary : secondary.opacity30,
-          ),
+          style: _detailStyleOf(
+            style,
+          ).copyWith(color: enabled ? secondary : secondary.opacity30),
         ),
       ],
     );
