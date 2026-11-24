@@ -286,6 +286,7 @@ Widget generateSliverSection<T>({
   String? footer,
   bool atTop = false,
   bool last = false,
+  bool addAutomaticKeepAlives = true,
 }) {
   if (items.isEmpty) {
     return const SliverToBoxAdapter();
@@ -300,6 +301,7 @@ Widget generateSliverSection<T>({
         const SliverToBoxAdapter(child: ListSectionGap()),
       SliverPrismList(
         itemCount: items.length,
+        addAutomaticKeepAlives: addAutomaticKeepAlives,
         itemBuilder: (_, index) => ItemPositionProvider(
           position: ItemPosition.get(index, items.length),
           child: itemBuilder(items[index]),
