@@ -54,21 +54,25 @@ class ListRow extends StatelessWidget {
         .of(context, emphasized: true)
         .copyWith(color: colorScheme.onSurfaceVariant);
     final iconColor = colorScheme.onSurfaceVariant;
+    final buttonTheme = ButtonTheme.of(context);
     // As ListTile does: an icon theme a slot sets must not recolor a button.
     final iconButtonColor =
-        ButtonTheme.of(context).icon?.foregroundColor?.resolve(const {}) ??
-        iconColor;
+        buttonTheme.icon?.foregroundColor?.resolve(const {}) ?? iconColor;
     final leading = this.leading;
     final subtitle = this.subtitle;
     final trailing = this.trailing;
-    return IconTheme.merge(
-      data: IconThemeData(color: iconColor),
-      child: ButtonTheme.merge(
+    // IconTheme.merge and ButtonTheme.merge, without the element each adds.
+    final iconTheme =
+        context.dependOnInheritedWidgetOfExactType<IconTheme>()?.data ??
+        const IconThemeData.fallback();
+    return IconTheme(
+      data: iconTheme.merge(IconThemeData(color: iconColor)),
+      child: ButtonTheme(
         data: ButtonThemeData(
           icon: ButtonStyle(
             foregroundColor: WidgetStatePropertyAll(iconButtonColor),
           ),
-        ),
+        ).merge(buttonTheme),
         child: _ListRowLayout(
           padding: EdgeInsets.fromLTRB(
             math.max(safe.left, inset.left),

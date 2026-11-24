@@ -96,43 +96,37 @@ class _DecorationListItemState extends State<DecorationListItem> {
         statesController: _states,
         inert: sorting,
         onPressed: proxyDecorator ? null : widget.onPressed,
-        child: LayoutBuilder(
-          builder: (_, constraints) {
-            final tile = ListRow(
-              leading: widget.leading == null
-                  ? null
-                  : IgnorePointer(ignoring: sorting, child: widget.leading),
-              padding:
-                  widget.contentPadding ??
-                  EdgeInsetsDirectional.only(
-                    start: insets.leading,
-                    end: widget.trailing == null
-                        ? insets.leading
-                        : insets.trailing,
-                  ),
-              title: _ListRowSeparatorStart(child: widget.title),
-              subtitle: widget.subtitle,
-              minVerticalPadding:
-                  widget.minVerticalPadding ??
-                  (shortRow
-                      ? math.max(
-                          0.0,
-                          listRowVerticalPadding -
-                              (unscaledRowHeight - minHeight) / 2,
-                        )
-                      : null),
-              minHeight: minHeight,
-              alignment: widget.alignment,
-              horizontalTitleGap: widget.horizontalTitleGap,
-              trailing: sortable == null
-                  ? widget.trailing
-                  : SortableTrailing(item: sortable, child: widget.trailing),
-            );
-            if (constraints.maxHeight >= double.infinity) {
-              return tile;
-            }
-            return SizedBox(height: constraints.maxHeight, child: tile);
-          },
+        child: _FillsBoundedHeight(
+          child: ListRow(
+            leading: widget.leading == null
+                ? null
+                : IgnorePointer(ignoring: sorting, child: widget.leading),
+            padding:
+                widget.contentPadding ??
+                EdgeInsetsDirectional.only(
+                  start: insets.leading,
+                  end: widget.trailing == null
+                      ? insets.leading
+                      : insets.trailing,
+                ),
+            title: _ListRowSeparatorStart(child: widget.title),
+            subtitle: widget.subtitle,
+            minVerticalPadding:
+                widget.minVerticalPadding ??
+                (shortRow
+                    ? math.max(
+                        0.0,
+                        listRowVerticalPadding -
+                            (unscaledRowHeight - minHeight) / 2,
+                      )
+                    : null),
+            minHeight: minHeight,
+            alignment: widget.alignment,
+            horizontalTitleGap: widget.horizontalTitleGap,
+            trailing: sortable == null
+                ? widget.trailing
+                : SortableTrailing(item: sortable, child: widget.trailing),
+          ),
         ),
       ),
     );
@@ -145,6 +139,43 @@ class _DecorationListItemState extends State<DecorationListItem> {
       borderRadius: AppRadius.all(AppCorner.listGroup * proxy!.lift),
       child: row,
     );
+  }
+}
+
+class _FillsBoundedHeight extends SingleChildRenderObjectWidget {
+  const _FillsBoundedHeight({required super.child});
+
+  @override
+  RenderObject createRenderObject(BuildContext context) =>
+      _RenderFillsBoundedHeight();
+}
+
+class _RenderFillsBoundedHeight extends RenderProxyBox {
+  BoxConstraints _childConstraints(BoxConstraints constraints) =>
+      constraints.hasBoundedHeight
+      ? constraints.tighten(height: constraints.maxHeight)
+      : constraints;
+
+  @override
+  Size computeDryLayout(covariant BoxConstraints constraints) =>
+      child?.getDryLayout(_childConstraints(constraints)) ??
+      constraints.smallest;
+
+  @override
+  double? computeDryBaseline(
+    covariant BoxConstraints constraints,
+    TextBaseline baseline,
+  ) => child?.getDryBaseline(_childConstraints(constraints), baseline);
+
+  @override
+  void performLayout() {
+    final child = this.child;
+    if (child == null) {
+      size = constraints.smallest;
+      return;
+    }
+    child.layout(_childConstraints(constraints), parentUsesSize: true);
+    size = child.size;
   }
 }
 

@@ -203,4 +203,44 @@ void main() {
       height,
     );
   });
+
+  testWidgets('a list item fills a bounded height and adds no builder to '
+      'its row', (tester) async {
+    await tester.pumpWidget(
+      TestApp(
+        child: HostScaffold(
+          body: Column(
+            children: [
+              SizedBox(
+                height: 120,
+                child: DecorationListItem(
+                  title: const Text('bounded'),
+                  onPressed: () {},
+                ),
+              ),
+              DecorationListItem(title: const Text('free'), onPressed: () {}),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    expect(tester.getSize(find.widgetWithText(ListRow, 'bounded')).height, 120);
+    expect(
+      tester.getSize(find.widgetWithText(ListRow, 'free')).height,
+      tester.getSize(find.widgetWithText(DecorationListItem, 'free')).height,
+    );
+    expect(
+      find.descendant(
+        of: find.byType(DecorationListItem),
+        matching: find.byWidgetPredicate(
+          (widget) =>
+              widget is Builder ||
+              widget is LayoutBuilder ||
+              widget.runtimeType.toString() == '_MergedButtonTheme',
+        ),
+      ),
+      findsNothing,
+    );
+  });
 }
