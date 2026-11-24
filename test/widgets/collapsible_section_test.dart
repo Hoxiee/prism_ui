@@ -230,6 +230,65 @@ void main() {
     expect(tester.element(find.text('n3')), same(unfolding));
   });
 
+  testWidgets('with animations off a list unfolds and folds at once', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(400, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+      TestApp(
+        child: Builder(
+          builder: (context) => MediaQuery(
+            data: MediaQuery.of(context).copyWith(disableAnimations: true),
+            child: Surface(
+              child: CustomScrollView(
+                slivers: [
+                  SliverCollapsibleSection(
+                    label: 'Nodes',
+                    itemCount: 40,
+                    itemBuilder: (_, index) =>
+                        SizedBox(height: 64, child: Text('n$index')),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    final top = tester.getTopLeft(find.text('n6')).dy;
+
+    await tester.tap(find.text('Nodes 40'));
+    await tester.pump();
+    expect(tester.hasRunningAnimations, isFalse);
+    expect(find.text('n0'), findsNothing);
+
+    await tester.tap(find.text('Nodes 40'));
+    await tester.pump();
+    expect(tester.hasRunningAnimations, isFalse);
+    expect(tester.getTopLeft(find.text('n6')).dy, top);
+  });
+
+  testWidgets('the motion does not start where it already stands', (
+    tester,
+  ) async {
+    final controller = AnimationController(vsync: tester, value: 1);
+    addTearDown(controller.dispose);
+    final statuses = <AnimationStatus>[];
+    controller.addStatusListener(statuses.add);
+
+    UnfoldMotion.run(controller, open: true);
+    expect(controller.isAnimating, isFalse);
+    expect(statuses, isEmpty);
+
+    UnfoldMotion.run(controller, open: false);
+    expect(controller.isAnimating, isTrue);
+    expect(statuses, [AnimationStatus.reverse]);
+    controller.stop();
+  });
+
   testWidgets('builds only the entries in view, open or unfolding', (
     tester,
   ) async {

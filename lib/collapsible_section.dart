@@ -147,6 +147,15 @@ class _SliverCollapsibleGroupsState extends State<SliverCollapsibleGroups>
   @override
   void didUpdateWidget(SliverCollapsibleGroups oldWidget) {
     super.didUpdateWidget(oldWidget);
+    final keys = {for (final group in widget.groups) group.key};
+    _entryKeys.removeWhere((key, _) => !keys.contains(key));
+    _controllers.removeWhere((key, controller) {
+      if (keys.contains(key)) {
+        return false;
+      }
+      controller.dispose();
+      return true;
+    });
     if (oldWidget.collapsible == widget.collapsible) {
       return;
     }
@@ -490,9 +499,7 @@ abstract final class UnfoldMotion {
     damping: 50.27,
   );
 
-  /// Ends the motion where UIKit ends its animation, 0.367 s after a start
-  /// from rest, when the spring is within a thousandth of its target; the
-  /// velocity there is 0.023, so only the distance decides.
+  /// Ends the motion where UIKit's animation ends, 0.367 s from rest.
   static const _tolerance = Tolerance(distance: 1e-3, velocity: 0.03);
 
   static final chevronTurns = Tween<double>(begin: -0.25, end: 0);
@@ -505,15 +512,16 @@ abstract final class UnfoldMotion {
     bool animate = true,
   }) {
     final target = open ? 1.0 : 0.0;
-    if (!animate) {
-      controller.value = target;
+    if (!controller.isAnimating && controller.value == target) {
       return;
     }
+    // Without motion it still runs, from the target: setting the value alone
+    // reports no status when it lands on the one a new controller starts with.
     final simulation = SpringSimulation(
       spring,
-      controller.value,
+      animate ? controller.value : target,
       target,
-      controller.velocity,
+      animate ? controller.velocity : 0,
       snapToEnd: true,
       tolerance: _tolerance,
     );
