@@ -131,14 +131,14 @@ class _DockLayout {
     if (count <= 1) {
       return _DockLayout(
         inset: _barPadding,
-        cells: [if (count == 1) span - _barPadding * 2],
+        cells: [if (count == 1) math.max(span - _barPadding * 2, 0)],
         lenses: [if (count == 1) span],
       );
     }
     final overlap = (lens * count - span) / (count - 1);
     return _DockLayout(
       inset: overlap / 2,
-      cells: List.filled(count, lens - overlap),
+      cells: List.filled(count, math.max(lens - overlap, 0)),
       lenses: List.filled(count, lens),
     );
   }
@@ -146,7 +146,7 @@ class _DockLayout {
   /// Cells in proportion to [rooms] when they all fit, or each the same
   /// amount short of its room when they do not; lenses overlap by [overlap].
   factory _DockLayout.titled(double span, List<double> rooms, double overlap) {
-    final room = span - overlap;
+    final room = math.max(span - overlap, 0.0);
     final total = rooms.fold(0.0, (sum, room) => sum + room);
     final cells = total <= room
         ? [for (final want in rooms) want * room / total]
@@ -227,6 +227,18 @@ class _DockLayout {
     return lerpDouble(lenses[index], lenses[index + 1], clamped - index)!;
   }
 
+  /// The destination whose cell holds [dx], or the nearer end's past either.
+  int indexAt(double dx) {
+    var end = inset;
+    for (var index = 0; index < _last; index++) {
+      end += cells[index];
+      if (dx < end) {
+        return index;
+      }
+    }
+    return math.max(_last, 0);
+  }
+
   /// Where [dx] lies, in destinations: whole at their centers and in
   /// proportion between them.
   double positionOf(double dx) {
@@ -270,22 +282,37 @@ class _DockLayout {
       Object.hash(inset, Object.hashAll(cells), Object.hashAll(lenses));
 }
 
-/// How UIKit's floating tab bar (iOS 27) sets out [count] destinations: the
-/// lens overlap while they rest evenly, how far a lens reaches past the
-/// widest title, the most an even overlap may reach before the bar sets them
-/// out by title instead, the overlap they then take, and the span they need
-/// past their rooms to rest evenly at all. Fitted to its frames across
-/// 300-480 pt (.agents/ios-measurements.md, Tab bar layout).
-({double rest, double reach, double most, double loose, double slack})
-_spreadOf(int count, {required bool shortTitles}) => count == 4
-    ? (
-        rest: shortTitles ? 40 / 3 : 28 / 3,
-        reach: 40,
-        most: 22,
-        loose: 28,
-        slack: 82,
-      )
-    : (rest: 8.25, reach: 34, most: 20, loose: 22, slack: 78);
+typedef _Spread = ({
+  double rest,
+  double reach,
+  double most,
+  double loose,
+  double slack,
+});
+
+/// How UIKit's floating tab bar (iOS 27) sets out five destinations: the lens
+/// overlap while they rest evenly, how far a lens reaches past the widest
+/// title, the most an even overlap may reach before the bar sets them out by
+/// title instead, the overlap they then take, and the span they need past
+/// their rooms to rest evenly at all. Fitted to its frames across 300-480 pt
+/// (.agents/ios-measurements.md, Tab bar layout).
+const _Spread _fiveSpread = (
+  rest: 8.25,
+  reach: 34,
+  most: 20,
+  loose: 22,
+  slack: 78,
+);
+
+/// [_fiveSpread] for four destinations, which rest further apart while every
+/// title is short.
+_Spread _fourSpread({required bool shortTitles}) => (
+  rest: shortTitles ? 40 / 3 : 28 / 3,
+  reach: 40,
+  most: 22,
+  loose: 28,
+  slack: 82,
+);
 
 /// Sets out destinations whose labels are [titles] wide across [span] as
 /// iOS's tab bar does. Each wants a cell [_titleRoom] wider than its title
@@ -307,7 +334,9 @@ _DockLayout _dockLayout(double span, List<double> titles) {
     for (final title in titles) math.max(_minCell, title + _titleRoom),
   ];
   final shortTitles = widest + _titleRoom <= _minCell;
-  final spread = _spreadOf(count, shortTitles: shortTitles);
+  final spread = count == 4
+      ? _fourSpread(shortTitles: shortTitles)
+      : _fiveSpread;
   final wanted = rooms.reduce((sum, room) => sum + room);
   if (span < wanted + spread.slack) {
     return _DockLayout.titled(span, rooms, _crowdedOverlap);
@@ -1121,6 +1150,7 @@ class _FloatingNavigationBarState extends State<FloatingNavigationBar>
     TextStyle style,
     TextScaler scaler,
     TextDirection direction,
+    Locale? locale,
   })?
   _measuredFor;
   List<({double width, double height})> _labelSizes = const [];
@@ -1135,13 +1165,15 @@ class _FloatingNavigationBarState extends State<FloatingNavigationBar>
       style: style,
       scaler: MediaQuery.textScalerOf(context),
       direction: Directionality.of(context),
+      locale: Localizations.maybeLocaleOf(context),
     );
     final last = _measuredFor;
     if (last == null ||
         !listEquals(last.labels, key.labels) ||
         last.style != key.style ||
         last.scaler != key.scaler ||
-        last.direction != key.direction) {
+        last.direction != key.direction ||
+        last.locale != key.locale) {
       _measuredFor = key;
       _labelSizes = [
         for (final label in key.labels) _measureLabel(context, label, style),
@@ -1162,8 +1194,11 @@ class _FloatingNavigationBarState extends State<FloatingNavigationBar>
     _glow.addListener(_shine);
     _glowSpread.addListener(_shine);
     _hoverAt.addListener(_leanContent);
+    PaintingBinding.instance.systemFonts.addListener(_remeasureLabels);
     _syncParallax();
   }
+
+  void _remeasureLabels() => setState(() => _measuredFor = null);
 
   @override
   void didUpdateWidget(covariant FloatingNavigationBar oldWidget) {
@@ -1192,6 +1227,7 @@ class _FloatingNavigationBarState extends State<FloatingNavigationBar>
     _glowSpread.dispose();
     _touchGlow.dispose();
     _hoverAt.dispose();
+    PaintingBinding.instance.systemFonts.removeListener(_remeasureLabels);
     super.dispose();
   }
 
@@ -1275,7 +1311,8 @@ class _FloatingNavigationBarState extends State<FloatingNavigationBar>
     return position;
   }
 
-  int _indexAt(double position) => position.round().clamp(0, _lastIndex);
+  int _indexAt(double position) =>
+      _layout.indexAt(_layout.centerAt(position)).clamp(0, _lastIndex);
 
   double _leanAt(double position) {
     final index = _indexAt(position);
@@ -1551,7 +1588,7 @@ class _FloatingNavigationBarState extends State<FloatingNavigationBar>
                                 index: index,
                                 part: part,
                                 lens: _lens,
-                                layout: layout,
+                                slots: layout,
                                 jelly: _jelly,
                                 parallax: _parallax[index],
                                 lift: _lift,
@@ -1845,7 +1882,7 @@ class _FloatingBarItem extends StatefulWidget {
     required this.index,
     required this.part,
     required this.lens,
-    required this.layout,
+    required this.slots,
     required this.jelly,
     required this.parallax,
     required this.lift,
@@ -1863,7 +1900,7 @@ class _FloatingBarItem extends StatefulWidget {
   /// the destination it copies takes the presses and the focus.
   final _LensPart part;
   final _Spring lens;
-  final _DockLayout layout;
+  final _DockLayout slots;
   final ValueListenable<double> jelly;
   final ValueListenable<double> parallax;
   final ValueListenable<double> lift;
@@ -1906,7 +1943,7 @@ class _FloatingBarItemState extends State<_FloatingBarItem> {
     final content = _LensTint(
       part: widget.part,
       lens: widget.lens,
-      slots: widget.layout,
+      slots: widget.slots,
       jelly: widget.jelly,
       lift: widget.lift,
       parallax: widget.parallax,
