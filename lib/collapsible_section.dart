@@ -492,18 +492,25 @@ class UnfoldEntryTransition extends StatelessWidget {
         reverseCurve: Curves.easeInCubic,
       );
 
-  @override
-  Widget build(BuildContext context) {
+  /// Where the entry at [index] slides in from, in its own heights.
+  static Tween<Offset> slideOf(int index) =>
+      Tween(begin: Offset(0, -index - 0.5), end: Offset.zero);
+
+  /// The stretch of the unfolding over which the entry at [index] fades in.
+  static Interval fadeOf(int index, double visibleCount) {
     final half = visibleCount / 2;
     final distance = (half - index - 0.5).abs() / half;
     final start = math.min(1.0, distance) * (1 - _fade);
+    return Interval(start, start + _fade);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return SlideTransition(
-      position: animation.drive(
-        Tween(begin: Offset(0, -index - 0.5), end: Offset.zero),
-      ),
+      position: animation.drive(slideOf(index)),
       child: FadeTransition(
         opacity: animation.drive(
-          CurveTween(curve: Interval(start, start + _fade)),
+          CurveTween(curve: fadeOf(index, visibleCount)),
         ),
         child: child,
       ),
