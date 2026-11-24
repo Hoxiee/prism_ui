@@ -6,6 +6,7 @@ import 'package:prism_ui/context.dart';
 import 'package:prism_ui/deferred_push.dart';
 import 'package:prism_ui/drag_back.dart';
 import 'package:prism_ui/keyboard_inset_hold.dart';
+import 'package:prism_ui/liquid_glass.dart';
 import 'package:prism_ui/page_transition.dart';
 import 'package:prism_ui/sheet_navigator.dart';
 
@@ -177,7 +178,69 @@ class _RootPageRoute<T> extends PageRoute<T> {
     return Semantics(
       scopesRoute: true,
       explicitChildNodes: true,
-      child: (settings as RootPage<T>).child,
+      child: _StillUnderSheet(
+        cover: sheetCoverOfRoute(this),
+        child: (settings as RootPage<T>).child,
+      ),
+    );
+  }
+}
+
+/// A card route's snapshot under a moving sheet, for a page that has none.
+class _StillUnderSheet extends StatefulWidget {
+  const _StillUnderSheet({required this.cover, required this.child});
+
+  final Animation<double> cover;
+  final Widget child;
+
+  @override
+  State<_StillUnderSheet> createState() => _StillUnderSheetState();
+}
+
+class _StillUnderSheetState extends State<_StillUnderSheet> {
+  final _snapshot = SnapshotController();
+  var _glass = false;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.cover.addStatusListener(_update);
+  }
+
+  @override
+  void didUpdateWidget(_StillUnderSheet oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.cover != widget.cover) {
+      oldWidget.cover.removeStatusListener(_update);
+      widget.cover.addStatusListener(_update);
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _glass = LiquidGlassScope.of(context);
+  }
+
+  void _update(AnimationStatus status) {
+    _snapshot.allowSnapshotting = !_glass && status.isAnimating;
+  }
+
+  @override
+  void dispose() {
+    widget.cover.removeStatusListener(_update);
+    _snapshot.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    _update(widget.cover.status);
+    return SnapshotWidget(
+      controller: _snapshot,
+      mode: SnapshotMode.permissive,
+      autoresize: true,
+      child: widget.child,
     );
   }
 }

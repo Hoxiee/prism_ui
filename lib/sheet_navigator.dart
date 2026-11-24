@@ -23,6 +23,9 @@ final _covers = Expando<ProxyAnimation>();
 ProxyAnimation _coverOf(Route<dynamic> route) =>
     _covers[route] ??= ProxyAnimation(kAlwaysDismissedAnimation);
 
+/// Runs to 1 as a sheet covers [route].
+Animation<double> sheetCoverOfRoute(Route<dynamic> route) => _coverOf(route);
+
 /// Hands the route below the sheet's entrance, for it to step back behind.
 mixin SheetCoverRouteMixin<T> on TransitionRoute<T> {
   ProxyAnimation? _covered;
