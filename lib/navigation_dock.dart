@@ -30,6 +30,9 @@ const double _maxItemExtent = 86;
 const double _minPitch = 68;
 const double _crowdedOverhang = 10;
 const _fullWidthCount = 5;
+// The widest iPhone: five destinations fill its row, and a wider window
+// centers a bar as wide as that row.
+const double _widestPhone = 440;
 const double _iconSize = 28;
 const double _labelGap = 1;
 const double _labelInset = 2;
@@ -52,7 +55,7 @@ const double _jellyStretch = 0.2;
 const double _jellyBrake = 25;
 const double _jellySquash = 0.15;
 const double _jellyAspect = 1.4;
-// A fifth of a dp at each edge of the widest mobile lens, 134 dp lifted.
+// Under a fifth of a dp at each edge of the widest lens, 110 dp lifted.
 const double _jellyRest = 3e-3;
 const double _glowReach = 28;
 const double _glowGrowth = 3;
@@ -356,7 +359,7 @@ class NavigationDock extends StatelessWidget {
                   child: ConstrainedBox(
                     constraints: BoxConstraints(
                       maxWidth: destinations.length >= _fullWidthCount
-                          ? double.infinity
+                          ? _widestPhone - _edgeMargin * 2
                           : destinations.length * _maxItemExtent +
                                 _barPadding * 4,
                     ),
