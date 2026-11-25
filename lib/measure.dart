@@ -109,6 +109,12 @@ class MeasureScope extends InheritedWidget {
     return scope!.measure;
   }
 
+  static Measure? maybeOf(BuildContext context, {bool listen = true}) =>
+      (listen
+              ? context.dependOnInheritedWidgetOfExactType<MeasureScope>()
+              : context.getInheritedWidgetOfExactType<MeasureScope>())
+          ?.measure;
+
   @override
   bool updateShouldNotify(MeasureScope oldWidget) =>
       measure != oldWidget.measure;

@@ -70,29 +70,36 @@ class _TooltipBox extends StatelessWidget {
       TargetPlatform.iOS => false,
     };
     final dark = Theme.brightnessOf(context) == Brightness.dark;
-    final style = AppTextStyle.subheadline
-        .of(context)
-        .copyWith(
-          color: dark ? Colors.black : Colors.white,
-          fontSize: desktop ? 12 : 14,
-        );
-    return ConstrainedBox(
-      constraints: BoxConstraints(minHeight: desktop ? 24 : 32),
-      child: DefaultTextStyle(
-        style: style,
-        child: Container(
-          decoration: ShapeDecoration(
-            shape: AppShape.xs,
-            color: dark ? const Color(0xE6FFFFFF) : const Color(0xE6616161),
-          ),
-          padding: EdgeInsets.symmetric(
-            horizontal: desktop ? 8 : 16,
-            vertical: 4,
-          ),
-          child: Center(
-            widthFactor: 1,
-            heightFactor: 1,
-            child: Text(message, style: style),
+    final themed = Theme.of(context).tooltipTheme;
+    final style =
+        themed?.textStyle ??
+        AppTextStyle.subheadline
+            .of(context)
+            .copyWith(
+              color: dark ? Colors.black : Colors.white,
+              fontSize: desktop ? 12 : 14,
+            );
+    return Padding(
+      padding: themed?.margin ?? EdgeInsets.zero,
+      child: ConstrainedBox(
+        constraints:
+            themed?.constraints ?? BoxConstraints(minHeight: desktop ? 24 : 32),
+        child: DecoratedBox(
+          decoration:
+              themed?.decoration ??
+              ShapeDecoration(
+                shape: AppShape.xs,
+                color: dark ? const Color(0xE6FFFFFF) : const Color(0xE6616161),
+              ),
+          child: Padding(
+            padding:
+                themed?.padding ??
+                EdgeInsets.symmetric(horizontal: desktop ? 8 : 16, vertical: 4),
+            child: Center(
+              widthFactor: 1,
+              heightFactor: 1,
+              child: Text(message, style: style),
+            ),
           ),
         ),
       ),

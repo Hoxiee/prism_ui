@@ -107,6 +107,25 @@ ColorScheme _defaultScheme(Brightness brightness) =>
   TargetPlatform.linux => (family: 'Roboto', fallback: _linuxFallback),
 };
 
+/// What a [Tooltip] draws its box with; an app maps its own tooltip style here
+/// so a prism tooltip matches the ones its host draws.
+@immutable
+class TooltipThemeData {
+  const TooltipThemeData({
+    this.constraints,
+    this.padding,
+    this.margin,
+    this.textStyle,
+    this.decoration,
+  });
+
+  final BoxConstraints? constraints;
+  final EdgeInsetsGeometry? padding;
+  final EdgeInsetsGeometry? margin;
+  final TextStyle? textStyle;
+  final Decoration? decoration;
+}
+
 class ThemeData {
   factory ThemeData({
     ColorScheme? colorScheme,
@@ -118,6 +137,7 @@ class ThemeData {
     TapTargetSize? tapTargetSize,
     Color? scaffoldBackgroundColor,
     ColorScheme? elevatedColorScheme,
+    TooltipThemeData? tooltipTheme,
   }) {
     final scheme =
         colorScheme ?? _defaultScheme(brightness ?? Brightness.light);
@@ -142,6 +162,7 @@ class ThemeData {
       scaffoldBackgroundColor:
           scaffoldBackgroundColor ?? SurfaceLevel.page.colorOf(scheme),
       elevatedColorScheme: elevatedColorScheme,
+      tooltipTheme: tooltipTheme,
     );
   }
 
@@ -154,6 +175,7 @@ class ThemeData {
     required this.tapTargetSize,
     required this.scaffoldBackgroundColor,
     required this.elevatedColorScheme,
+    required this.tooltipTheme,
   });
 
   static final _fallbacks = <TargetPlatform, ThemeData>{};
@@ -168,6 +190,9 @@ class ThemeData {
 
   /// What sheets present with, where it differs: `.agents/surfaces.md`.
   final ColorScheme? elevatedColorScheme;
+
+  /// How a [Tooltip] draws its box; the defaults when unset.
+  final TooltipThemeData? tooltipTheme;
 
   Brightness get brightness => colorScheme.brightness;
 
@@ -213,6 +238,7 @@ class ThemeData {
     TapTargetSize? tapTargetSize,
     Color? scaffoldBackgroundColor,
     ColorScheme? elevatedColorScheme,
+    TooltipThemeData? tooltipTheme,
   }) {
     final scheme = colorScheme ?? this.colorScheme;
     return ThemeData(
@@ -226,6 +252,7 @@ class ThemeData {
           scaffoldBackgroundColor ??
           (colorScheme == null ? this.scaffoldBackgroundColor : null),
       elevatedColorScheme: elevatedColorScheme ?? this.elevatedColorScheme,
+      tooltipTheme: tooltipTheme ?? this.tooltipTheme,
     );
   }
 }
