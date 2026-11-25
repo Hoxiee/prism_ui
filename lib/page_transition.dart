@@ -257,8 +257,8 @@ mixin CardRouteMixin<T> on ModalRoute<T> {
   }
 
   void _handleStatus(AnimationStatus _) {
-    _updateMotionSnapshot();
     updateBarItems();
+    _updateMotionSnapshot();
   }
 
   void _handleSheetCoverStatus(AnimationStatus _) => _updateMotionSnapshot();
