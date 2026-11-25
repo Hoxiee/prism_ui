@@ -42,9 +42,8 @@ class _SidebarPageState extends State<SidebarPage> {
         Controls(
           children: [
             FilledButton(
-              onPressed: () => setState(
-                () => _selected = (_selected + 1) % _labels.length,
-              ),
+              onPressed: () =>
+                  setState(() => _selected = (_selected + 1) % _labels.length),
               child: const Text('Select next'),
             ),
             TextButton(

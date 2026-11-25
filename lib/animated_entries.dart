@@ -314,6 +314,7 @@ Widget generateAnimatedSection({
   required List<Widget> items,
   List<IconButtonData> actions = const [],
   String? footer,
+  bool last = false,
 }) {
   return Column(
     children: [
@@ -326,7 +327,7 @@ Widget generateAnimatedSection({
       AnimatedEntries(grouped: true, children: items),
       AnimatedReveal(
         visible: items.isNotEmpty && footer != null,
-        child: _AnimatedFooter(text: footer ?? ''),
+        child: _AnimatedFooter(text: footer ?? '', last: last),
       ),
     ],
   );
@@ -335,14 +336,15 @@ Widget generateAnimatedSection({
 /// Eases a footer whose text gains or loses a line along with its rows.
 class _AnimatedFooter extends StatelessWidget {
   final String text;
+  final bool last;
 
-  const _AnimatedFooter({required this.text});
+  const _AnimatedFooter({required this.text, required this.last});
 
   @override
   Widget build(BuildContext context) => AnimatedSize(
     duration: context.motionDuration(commonDuration),
     curve: Curves.easeInOutCubic,
     alignment: Alignment.topCenter,
-    child: ListFooter(text: text),
+    child: ListFooter(text: text, last: last),
   );
 }

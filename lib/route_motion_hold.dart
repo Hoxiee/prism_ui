@@ -5,6 +5,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
 import 'package:prism_ui/navigator.dart';
 import 'package:prism_ui/sheet_navigator.dart';
+import 'package:prism_ui/route_scope.dart';
 
 class _RouteMotion {
   _RouteMotion(BuildContext context)
@@ -64,6 +65,7 @@ bool isRouteMoving(BuildContext context) => _RouteMotion(context).isMoving;
 mixin RouteMotionHoldMixin<T extends StatefulWidget> on State<T> {
   ModalRoute<Object?>? _route;
   _RouteMotion? _motion;
+  ValueListenable<TickerModeData>? _tickerMode;
   VoidCallback? _heldUpdate;
   var _settleRun = 0;
   var _settling = false;
@@ -93,12 +95,15 @@ mixin RouteMotionHoldMixin<T extends StatefulWidget> on State<T> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final tickersEnabled = TickerMode.valuesOf(context).enabled;
-    if (tickersEnabled && !_tickersEnabled && _heldUpdate != null) {
-      SchedulerBinding.instance.addPostFrameCallback((_) => _releaseHeld());
+    // The notifier keeps this page from rebuilding whenever a page over it
+    // mutes the tickers, as depending on [TickerMode] would.
+    final tickerMode = TickerMode.getValuesNotifier(context);
+    if (!identical(tickerMode, _tickerMode)) {
+      _tickerMode?.removeListener(_handleTickers);
+      _tickerMode = tickerMode..addListener(_handleTickers);
     }
-    _tickersEnabled = tickersEnabled;
-    final route = ModalRoute.of(context);
+    _tickersEnabled = tickerMode.value.enabled;
+    final route = routeOf(context);
     if (_motion != null && identical(route, _route)) {
       return;
     }
@@ -107,8 +112,22 @@ mixin RouteMotionHoldMixin<T extends StatefulWidget> on State<T> {
     _motion = _RouteMotion(context)..addListener(_handleStatus, _releaseHeld);
   }
 
+  void _handleTickers() {
+    final tickersEnabled = _tickerMode?.value.enabled ?? true;
+    if (tickersEnabled == _tickersEnabled) {
+      return;
+    }
+    final resumed = tickersEnabled && _heldUpdate != null;
+    _tickersEnabled = tickersEnabled;
+    if (resumed) {
+      SchedulerBinding.instance.addPostFrameCallback((_) => _releaseHeld());
+    }
+  }
+
   @override
   void dispose() {
+    _tickerMode?.removeListener(_handleTickers);
+    _tickerMode = null;
     _detach();
     _heldUpdate = null;
     super.dispose();
@@ -207,13 +226,18 @@ class _ArrivalCacheExtentBuilderState extends State<ArrivalCacheExtentBuilder>
   Widget build(BuildContext context) => widget.builder(arrivalCacheExtent);
 }
 
-/// A list's cache extent: none until its route settles and nothing animates.
+/// A list's cache extent: none until its route settles, then widened by steps.
 mixin ArrivalCacheExtentMixin<T extends StatefulWidget> on State<T> {
-  var _widenScheduled = false;
-  var _widened = false;
+  static const _steps = <ScrollCacheExtent?>[
+    ScrollCacheExtent.pixels(0),
+    ScrollCacheExtent.pixels(120),
+    null,
+  ];
 
-  ScrollCacheExtent? get arrivalCacheExtent =>
-      _widened ? null : const ScrollCacheExtent.pixels(0);
+  var _widenScheduled = false;
+  var _step = 0;
+
+  ScrollCacheExtent? get arrivalCacheExtent => _steps[_step];
 
   @override
   void didChangeDependencies() {
@@ -231,10 +255,52 @@ mixin ArrivalCacheExtentMixin<T extends StatefulWidget> on State<T> {
       return;
     }
     await whenNothingAnimates();
-    if (mounted) {
-      setState(() => _widened = true);
+    for (var step = 1; step < _steps.length; step++) {
+      if (!mounted) {
+        return;
+      }
+      setState(() => _step = step);
+      if (step + 1 < _steps.length) {
+        await SchedulerBinding.instance.endOfFrame;
+      }
     }
   }
+}
+
+/// Builds [child] a frame after itself, to split a first screen over frames.
+class NextFrame extends StatefulWidget {
+  const NextFrame({
+    super.key,
+    required this.child,
+    this.placeholder = const SizedBox.shrink(),
+  });
+
+  const NextFrame.sliver({super.key, required this.child})
+    : placeholder = const SliverToBoxAdapter();
+
+  final Widget child;
+  final Widget placeholder;
+
+  @override
+  State<NextFrame> createState() => _NextFrameState();
+}
+
+class _NextFrameState extends State<NextFrame> {
+  var _shown = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        setState(() => _shown = true);
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) =>
+      _shown ? widget.child : widget.placeholder;
 }
 
 const _stillnessLimit = Duration(milliseconds: 500);

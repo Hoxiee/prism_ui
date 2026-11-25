@@ -67,7 +67,11 @@ class _SegmentsPageState extends State<SegmentsPage>
         Section(
           title: 'SegmentedControl',
           child: SegmentedControl<String>(
-            segments: const [('Day', 'Day'), ('Week', 'Week'), ('Month', 'Month')],
+            segments: const [
+              ('Day', 'Day'),
+              ('Week', 'Week'),
+              ('Month', 'Month'),
+            ],
             value: _plain,
             onChanged: (value) => setState(() => _plain = value),
           ),
@@ -107,7 +111,8 @@ class _SegmentsPageState extends State<SegmentsPage>
         ),
         Section(
           title: 'NullStatus',
-          caption: 'Every illustration; tap one, or press replay, to run its '
+          caption:
+              'Every illustration; tap one, or press replay, to run its '
               'entrance.',
           child: Panel(
             child: Column(

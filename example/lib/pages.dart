@@ -13,7 +13,12 @@ final galleryPages = <GalleryPage>[
   GalleryPage('sidebar', 'Sidebar', Glyphs.sort, (_) => const SidebarPage()),
   GalleryPage('dock', 'Navigation dock', Glyphs.pin, (_) => const DockPage()),
   GalleryPage('sheets', 'Sheets', Glyphs.dragHandle, (_) => const SheetsPage()),
-  GalleryPage('cards', 'Cards and lists', Glyphs.copy, (_) => const CardsPage()),
+  GalleryPage(
+    'cards',
+    'Cards and lists',
+    Glyphs.copy,
+    (_) => const CardsPage(),
+  ),
   GalleryPage('tooltips', 'Tooltips', Glyphs.eye, (_) => const TooltipsPage()),
   GalleryPage(
     'segments',
