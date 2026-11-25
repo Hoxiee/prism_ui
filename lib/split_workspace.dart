@@ -386,7 +386,10 @@ class _SplitWorkspaceState extends State<SplitWorkspace> {
                             ? _RetainedLanding(
                                 child: pages.isEmpty ? widget.landing : null,
                               )
-                            : widget.catalog,
+                            : _DockedCatalog(
+                                catalog: widget.catalog,
+                                navigation: navigation,
+                              ),
                       ),
                       for (final page in pages)
                         _SplitWorkspaceRoutePage(
@@ -522,6 +525,38 @@ class _RetainedLandingState extends State<_RetainedLanding> {
 
   @override
   Widget build(BuildContext context) => _shown ?? const SizedBox.expand();
+}
+
+/// Keeps the compact catalog's dock inside the placeholder page, so a page
+/// sliding in covers it like the catalog content it belongs with.
+class _DockedCatalog extends StatelessWidget {
+  const _DockedCatalog({required this.catalog, required this.navigation});
+
+  final Widget catalog;
+  final NavigationDockScope? navigation;
+
+  @override
+  Widget build(BuildContext context) {
+    final navigation = this.navigation;
+    if (navigation == null) return catalog;
+    final bar = navigation.held
+        ? navigation.navigation
+        : const SizedBox.shrink();
+    return navigation.floating
+        ? Stack(
+            fit: StackFit.expand,
+            children: [
+              catalog,
+              PositionedDirectional(start: 0, end: 0, bottom: 0, child: bar),
+            ],
+          )
+        : Column(
+            children: [
+              Expanded(child: catalog),
+              bar,
+            ],
+          );
+  }
 }
 
 class _SplitWorkspaceRoutePage extends Page<void> {
@@ -691,7 +726,11 @@ class _SplitWorkspacePageRoute extends _SplitWorkspaceRoute<void> {
           title: child.title,
           onTitleSelect: child.onTitleSelect,
           transitionTitle: child.transitionTitle,
-          previousTitle: returning
+          // Without a title to animate from the page keeps its plain title;
+          // a path header would turn a compact page into a breadcrumb.
+          previousTitle: child.previousTitle == null
+              ? null
+              : returning
               ? child.previousTitle
               : previousTitle ?? child.previousTitle,
           previousHasBack: returning ? child.previousHasBack : previousHasBack,
