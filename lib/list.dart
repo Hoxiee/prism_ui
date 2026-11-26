@@ -8,7 +8,6 @@ import 'package:prism_ui/checkbox.dart';
 import 'package:prism_ui/divider.dart';
 import 'package:prism_ui/context.dart';
 import 'package:prism_ui/prism_list.dart';
-import 'package:prism_ui/focus.dart';
 import 'package:prism_ui/inherited.dart';
 import 'package:prism_ui/item_position.dart';
 import 'package:prism_ui/list_text.dart';

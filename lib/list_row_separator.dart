@@ -1,19 +1,12 @@
 part of 'list.dart';
 
-/// Draws a row's bottom separator from where its title starts, and drops it
-/// whenever this row or the one below is highlighted, as iOS grouped lists
-/// do. The row below is found through the render tree, so a list only has to
-/// stack its rows for them to see each other.
+/// Draws a row's bottom separator from where its title starts.
 class _ListRowSeparator extends SingleChildRenderObjectWidget {
   final bool separated;
-  final bool emphasized;
-  final WidgetStatesController states;
   final double endIndent;
 
   const _ListRowSeparator({
     required this.separated,
-    required this.emphasized,
-    required this.states,
     required this.endIndent,
     required super.child,
   });
@@ -24,9 +17,6 @@ class _ListRowSeparator extends SingleChildRenderObjectWidget {
   _RenderListRowSeparator createRenderObject(BuildContext context) =>
       _RenderListRowSeparator(
         separated: separated,
-        emphasized: emphasized,
-        states: states,
-        remote: RemoteFocusAdapter.isEnabledOf(context),
         endIndent: endIndent,
         color: _color(context),
         textDirection: Directionality.of(context),
@@ -40,18 +30,10 @@ class _ListRowSeparator extends SingleChildRenderObjectWidget {
   ) {
     renderObject
       ..separated = separated
-      ..emphasized = emphasized
-      ..states = states
-      ..remote = RemoteFocusAdapter.isEnabledOf(context)
       ..endIndent = endIndent
       ..color = _color(context)
       ..textDirection = Directionality.of(context)
       ..devicePixelRatio = MediaQuery.devicePixelRatioOf(context);
-    // A reorder hands a row a new neighbour below without changing any of
-    // its own properties.
-    if (separated) {
-      renderObject.markNeedsPaint();
-    }
   }
 }
 
@@ -90,28 +72,17 @@ class _RenderListRowSeparatorStart extends RenderProxyBox {
 class _RenderListRowSeparator extends RenderProxyBox {
   _RenderListRowSeparator({
     required bool separated,
-    required bool emphasized,
-    required WidgetStatesController states,
-    required bool remote,
     required double endIndent,
     required Color color,
     required TextDirection textDirection,
     required double devicePixelRatio,
   }) : _separated = separated,
-       _emphasized = emphasized,
-       _states = states,
-       _remote = remote,
        _endIndent = endIndent,
        _color = color,
        _textDirection = textDirection,
-       _devicePixelRatio = devicePixelRatio {
-    _highlighted = _resolveHighlighted();
-  }
-
-  static const _maxSearchDepth = 32;
+       _devicePixelRatio = devicePixelRatio;
 
   _RenderListRowSeparatorStart? _start;
-  late bool _highlighted;
   double? _paintedOverhang;
   double? _settlingOverhang;
   bool _realignRequested = false;
@@ -124,40 +95,6 @@ class _RenderListRowSeparator extends RenderProxyBox {
     }
     _separated = value;
     markNeedsPaint();
-  }
-
-  bool _emphasized;
-
-  set emphasized(bool value) {
-    if (_emphasized == value) {
-      return;
-    }
-    _emphasized = value;
-    _updateHighlighted();
-  }
-
-  WidgetStatesController _states;
-
-  set states(WidgetStatesController value) {
-    if (_states == value) {
-      return;
-    }
-    if (attached) {
-      _states.removeListener(_updateHighlighted);
-      value.addListener(_updateHighlighted);
-    }
-    _states = value;
-    _updateHighlighted();
-  }
-
-  bool _remote;
-
-  set remote(bool value) {
-    if (_remote == value) {
-      return;
-    }
-    _remote = value;
-    _updateHighlighted();
   }
 
   double _endIndent;
@@ -205,75 +142,15 @@ class _RenderListRowSeparator extends RenderProxyBox {
     return (pixels < 1 ? 1 : pixels) / _devicePixelRatio;
   }
 
-  bool _resolveHighlighted() {
-    if (_emphasized) {
-      return true;
-    }
-    final states = _states.value;
-    return states.contains(WidgetState.pressed) ||
-        (states.contains(WidgetState.focused) &&
-            (_remote || FocusMovedByKey.instance.value));
-  }
-
-  void _updateHighlighted() {
-    final highlighted = _resolveHighlighted();
-    if (_highlighted == highlighted) {
-      return;
-    }
-    _highlighted = highlighted;
-    markNeedsPaint();
-    _neighbour(below: false)?.markNeedsPaint();
-  }
-
-  _RenderListRowSeparator? _neighbour({required bool below}) {
-    RenderObject node = this;
-    for (
-      var depth = 0;
-      node.parentData is! ContainerParentDataMixin<RenderObject>;
-      depth++
-    ) {
-      final parent = node.parent;
-      if (parent == null || depth == _maxSearchDepth) {
-        return null;
-      }
-      node = parent;
-    }
-    final siblings = node.parentData! as ContainerParentDataMixin<RenderObject>;
-    RenderObject? candidate = below
-        ? siblings.nextSibling
-        : siblings.previousSibling;
-    for (var depth = 0; candidate != null; depth++) {
-      if (candidate is _RenderListRowSeparator) {
-        return candidate;
-      }
-      if (depth == _maxSearchDepth) {
-        return null;
-      }
-      RenderObject? onlyChild;
-      var childCount = 0;
-      candidate.visitChildren((child) {
-        onlyChild = child;
-        childCount++;
-      });
-      candidate = childCount == 1 ? onlyChild : null;
-    }
-    return null;
-  }
-
   @override
   void attach(PipelineOwner owner) {
     super.attach(owner);
-    _states.addListener(_updateHighlighted);
-    FocusMovedByKey.instance.addListener(_updateHighlighted);
-    _highlighted = _resolveHighlighted();
     _PixelRealignment.watch(this);
   }
 
   @override
   void detach() {
     _PixelRealignment.unwatch(this);
-    _states.removeListener(_updateHighlighted);
-    FocusMovedByKey.instance.removeListener(_updateHighlighted);
     super.detach();
   }
 
@@ -320,23 +197,11 @@ class _RenderListRowSeparator extends RenderProxyBox {
   }
 
   @override
-  void performLayout() {
-    super.performLayout();
-    // A lazily built row arrives below a row that has already painted.
-    if (_highlighted) {
-      _neighbour(below: false)?.markNeedsPaint();
-    }
-  }
-
-  @override
   void paint(PaintingContext context, Offset offset) {
     super.paint(context, offset);
     _paintedOverhang = null;
     _realignRequested = false;
-    if (!_separated || _highlighted) {
-      return;
-    }
-    if (_neighbour(below: true)?._highlighted ?? false) {
+    if (!_separated) {
       return;
     }
     final start = _start;

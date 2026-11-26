@@ -103,8 +103,6 @@ class _DecorationListItemState extends State<DecorationListItem> {
         minHeight < unscaledRowHeight;
     final row = _ListRowSeparator(
       separated: widget.separated && !proxyDecorator && !isEnd,
-      emphasized: widget.invalid,
-      states: _states,
       endIndent: insets.leading,
       child: Card(
         shape: AppShape.of(listItemRadiusOf(position)),
