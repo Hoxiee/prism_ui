@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
 
 const _swipeDistance = 48.0;
@@ -16,20 +17,26 @@ class PageSwipeNotification extends Notification {
 class PageSwipeScope extends InheritedWidget {
   const PageSwipeScope._({required this.claim, required super.child});
 
-  final void Function(int pointer, VoidCallback? onBack) claim;
+  final void Function(int pointer, VoidCallback? onBack, bool dragBack) claim;
 
   /// [onBack] takes a swipe toward the previous page that still reaches the
   /// [PageSwipe]: one an inner pager passed up from its first page, or any
   /// swipe on a route whose drag back is off, as while it vetoes its pop,
   /// holds a back layer or is still sliding in.
+  ///
+  /// [dragBack] marks a pointer an inner route follows with its own drag
+  /// back. The [PageSwipe] then stays out of the arena: its recognizer would
+  /// take the gesture first and only pop the route on release.
   static void blockPointer(
     BuildContext context,
     int pointer, {
     VoidCallback? onBack,
+    bool dragBack = false,
   }) {
     context.getInheritedWidgetOfExactType<PageSwipeScope>()?.claim(
       pointer,
       onBack,
+      dragBack,
     );
   }
 
@@ -88,23 +95,37 @@ class PageSwipe extends StatefulWidget {
 class _PageSwipeState extends State<PageSwipe> {
   var _drag = 0.0;
   var _overscroll = 0.0;
-  final _claims = <int, VoidCallback?>{};
+  final _claims = <int, ({VoidCallback? onBack, bool dragBack})>{};
   var _pointer = -1;
+
+  // Added by hand rather than by a [GestureDetector], so a claimed pointer
+  // never enters the arena: the plain recognizer accepts at the hit slop,
+  // ahead of the drag back's longer one.
+  late final _recognizer = HorizontalDragGestureRecognizer(debugOwner: this)
+    ..onStart = ((_) => _drag = 0)
+    ..onUpdate = ((details) => _drag += details.primaryDelta ?? 0)
+    ..onCancel = (() => _drag = 0)
+    ..onEnd = _endDrag;
 
   bool get _isBlocked => _claims.containsKey(_pointer);
 
-  void _claim(int pointer, VoidCallback? onBack) => _claims[pointer] = onBack;
+  void _claim(int pointer, VoidCallback? onBack, bool dragBack) =>
+      _claims[pointer] = (onBack: onBack, dragBack: dragBack);
 
   void _onPointerDown(PointerDownEvent event) {
     _claims.removeWhere((pointer, _) => pointer != event.pointer);
     _pointer = event.pointer;
+    // A drag back detector sits deeper, so it has claimed the pointer by now.
+    if (!(_claims[event.pointer]?.dragBack ?? false)) {
+      _recognizer.addPointer(event);
+    }
   }
 
   void _swipe(bool forward) {
     if (!_isBlocked) {
       widget.onSwipe(forward);
     } else if (!forward) {
-      _claims[_pointer]?.call();
+      _claims[_pointer]?.onBack?.call();
     }
     _claims.remove(_pointer);
   }
@@ -142,6 +163,12 @@ class _PageSwipeState extends State<PageSwipe> {
   }
 
   @override
+  void dispose() {
+    _recognizer.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     if (!widget.enabled) return widget.child;
     return PageSwipeScope._(
@@ -153,15 +180,7 @@ class _PageSwipeState extends State<PageSwipe> {
           child: Listener(
             behavior: HitTestBehavior.translucent,
             onPointerDown: _onPointerDown,
-            child: GestureDetector(
-              behavior: HitTestBehavior.translucent,
-              onHorizontalDragStart: (_) => _drag = 0,
-              onHorizontalDragUpdate: (details) =>
-                  _drag += details.primaryDelta ?? 0,
-              onHorizontalDragCancel: () => _drag = 0,
-              onHorizontalDragEnd: _endDrag,
-              child: widget.child,
-            ),
+            child: widget.child,
           ),
         ),
       ),

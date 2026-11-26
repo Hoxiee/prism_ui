@@ -394,10 +394,16 @@ class _DragBackDetectorState extends State<_DragBackDetector> {
   Offset _toLogical(Offset value) => Offset(value.dx * _towardEnd, value.dy);
 
   void _handlePointerDown(PointerDownEvent event) {
+    final canDragBack = widget.route._canDragBack;
     if (widget.route.isCurrent && widget.route.canPop) {
-      PageSwipeScope.blockPointer(context, event.pointer, onBack: _maybePop);
+      PageSwipeScope.blockPointer(
+        context,
+        event.pointer,
+        onBack: _maybePop,
+        dragBack: canDragBack,
+      );
     }
-    if (widget.route._canDragBack) {
+    if (canDragBack) {
       _directed.towardEnd = _towardEnd;
       _recognizer.addPointer(event);
     }
